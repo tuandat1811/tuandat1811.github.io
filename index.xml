@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>The Story</title>
+        <link>https://tuandat1811.github.io/</link>
+        <description>Recent content on The Story</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>en-us</language>
+        <lastBuildDate>Fri, 27 May 2022 18:42:54 +0700</lastBuildDate><atom:link href="https://tuandat1811.github.io/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>Test</title>
+        <link>https://tuandat1811.github.io/p/test/</link>
+        <pubDate>Fri, 27 May 2022 18:42:54 +0700</pubDate>
+        
+        <guid>https://tuandat1811.github.io/p/test/</guid>
+        <description></description>
+        </item>
+        
+    </channel>
+</rss>

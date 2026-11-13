@@ -426,3 +426,76 @@ body.br-noscroll { overflow: hidden; }
 .br-imgsize button[aria-pressed="true"] { background: var(--amber); color: var(--ink); }
 .br-editor-box .ProseMirror img { cursor: pointer; max-width: 100%; }
 .br-editor-box .ProseMirror img.ProseMirror-selectednode { outline: 3px solid var(--amber); }
+
+/* ---------- Record player (vinyl turntable, bottom-right) ---------- */
+.rp { position: fixed; right: 16px; bottom: 16px; z-index: 30; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.rp__deck {
+  width: 84px; height: 72px; padding: 0; border: 0; cursor: pointer; background: none;
+  filter: drop-shadow(0 8px 14px rgba(0,0,0,.5));
+}
+.rp__plinth {
+  position: relative; display: block; width: 100%; height: 100%; border-radius: 8px;
+  background: linear-gradient(#8a5a40, var(--wood) 60%, var(--wood-dark));
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.12), inset 0 -3px 0 rgba(0,0,0,.25);
+}
+.rp__vinyl {
+  position: absolute; left: 8px; top: 6px; width: 60px; height: 60px; border-radius: 50%;
+  background:
+    radial-gradient(circle, transparent 0 9px, rgba(255,255,255,.06) 9.5px, transparent 10.5px),
+    repeating-radial-gradient(circle, #141018 0 1.6px, #221b2b 1.6px 3.2px);
+  box-shadow: 0 0 0 2px #0d0a12, inset 0 0 0 1px rgba(255,255,255,.05);
+}
+.rp__vinyl::after { /* light sheen so the spin is visible */
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(from 20deg, transparent 0 15%, rgba(255,255,255,.12) 20%, transparent 30% 65%, rgba(255,255,255,.08) 70%, transparent 80%);
+}
+.rp__center {
+  position: absolute; left: 50%; top: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%;
+  background: radial-gradient(circle, #1a1420 0 2px, var(--amber) 2.5px 8px, #c97a35 8.5px);
+}
+.rp__arm { /* tonearm: rests off the record, swings on when playing */
+  position: absolute; right: 9px; top: 7px; width: 4px; height: 44px; border-radius: 2px;
+  background: linear-gradient(#e9dcc5, #b9a88d); transform-origin: 50% 4px; transform: rotate(8deg);
+  transition: transform .6s ease;
+}
+.rp__arm::before { content: ""; position: absolute; left: -4px; top: -3px; width: 12px; height: 12px; border-radius: 50%; background: #3a2c26; box-shadow: inset 0 0 0 3px #b9a88d; }
+.rp__arm::after { content: ""; position: absolute; left: -3px; bottom: -3px; width: 10px; height: 7px; border-radius: 2px; background: #2a2026; }
+.rp.is-playing .rp__vinyl { animation: rp-spin 1.8s linear infinite; }
+.rp.is-playing .rp__arm { transform: rotate(28deg); }
+.rp.is-loaded .rp__center { background: radial-gradient(circle, #1a1420 0 2px, var(--neon) 2.5px 8px, #b84a6c 8.5px); }
+@keyframes rp-spin { to { transform: rotate(360deg); } }
+.rp__deck:focus-visible { outline: 3px dashed var(--teal); outline-offset: 4px; border-radius: 10px; }
+
+.rp__panel {
+  width: min(340px, calc(100vw - 32px)); padding: 14px 16px 12px; border-radius: 12px;
+  background: rgba(22, 18, 31, .97); border: 3px solid var(--wood-light);
+  box-shadow: 0 14px 30px rgba(0,0,0,.55); color: var(--cream); font-size: 15px;
+}
+.rp__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.rp__head strong { font: 700 18px var(--display); color: var(--amber); }
+.rp__x { background: none; border: 0; color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer; padding: 0 4px; }
+.rp__x:hover { color: var(--cream); }
+.rp__now { margin: 0 0 10px; color: var(--muted); font-size: 14px; line-height: 1.4; }
+.rp__now b { color: var(--cream); font-weight: 600; }
+.rp__screen { aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; margin-bottom: 10px; background: #000; }
+.rp__screen iframe { display: block; width: 100%; height: 100%; border: 0; }
+.rp__label-text { display: block; font: 600 13px var(--display); color: var(--muted); margin-bottom: 4px; }
+.rp__row { display: flex; gap: 6px; }
+.rp__row input {
+  flex: 1; min-width: 0; font: 14px var(--serif); color: var(--cream); background: var(--night);
+  border: 2px solid var(--plum); border-radius: 6px; padding: 6px 8px;
+}
+.rp__row input:focus { outline: none; border-color: var(--amber); }
+.rp__controls { display: flex; gap: 8px; margin-top: 10px; }
+.rp__msg { margin: 8px 0 0; min-height: 1.2em; font-size: 13px; color: var(--muted); }
+.rp__msg.is-error { color: var(--neon); }
+.backroom-page .rp { display: none; }
+@media (max-width: 720px) {
+  .rp { right: 12px; bottom: 12px; }
+  .rp__deck { width: 70px; height: 60px; }
+  .rp__vinyl { width: 48px; height: 48px; left: 7px; top: 6px; }
+  .rp__arm { height: 36px; right: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rp.is-playing .rp__vinyl { animation: none; }
+}

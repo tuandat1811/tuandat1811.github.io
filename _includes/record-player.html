@@ -1,0 +1,30 @@
+<aside class="rp" data-rp aria-label="Record player">
+  <div class="rp__panel" id="rp-panel" data-rp-panel hidden>
+    <div class="rp__head">
+      <strong>The record player</strong>
+      <button class="rp__x" type="button" data-rp-close aria-label="Close the record player">×</button>
+    </div>
+    <p class="rp__now" data-rp-now>The turntable’s been quiet all evening. Got a song in mind? Hand me a YouTube Music link and I’ll put it on.</p>
+    <div class="rp__screen" data-rp-screen hidden></div>
+    <form class="rp__form" data-rp-form>
+      <label class="rp__label-text" for="rp-url">Your request — a YouTube Music link</label>
+      <div class="rp__row">
+        <input id="rp-url" name="url" type="url" inputmode="url" autocomplete="off" spellcheck="false"
+               placeholder="https://music.youtube.com/watch?v=…" required>
+        <button class="btn btn--small" type="submit">Put it on</button>
+      </div>
+    </form>
+    <div class="rp__controls" data-rp-controls hidden>
+      <button class="btn btn--small" type="button" data-rp-play>Pause</button>
+      <button class="btn btn--small btn--ghost" type="button" data-rp-eject>Take it off</button>
+    </div>
+    <p class="rp__msg" data-rp-msg role="status" aria-live="polite"></p>
+  </div>
+  <button class="rp__deck" type="button" data-rp-toggle aria-expanded="false" aria-controls="rp-panel" title="The record player — ask the barista for a song">
+    <span class="rp__plinth" aria-hidden="true">
+      <span class="rp__vinyl"><span class="rp__center"></span></span>
+      <span class="rp__arm"></span>
+    </span>
+    <span class="sr-only">Record player</span>
+  </button>
+</aside>

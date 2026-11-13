@@ -11,6 +11,8 @@
     {{ content }}
   </main>
   {% include footer.html %}
+  {% unless page.noindex %}{% include record-player.html %}{% endunless %}
   <script src="{{ '/assets/js/cafe.js' | relative_url }}" defer></script>
+  {% unless page.noindex %}<script src="{{ '/assets/js/record-player.js' | relative_url }}" defer></script>{% endunless %}
 </body>
 </html>

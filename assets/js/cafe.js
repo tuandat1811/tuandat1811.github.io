@@ -78,6 +78,49 @@
     }).catch(() => {});
   }
 
+  /* Chalkboard pages: show the menu N stories at a time (?page=2). Without JS every story is listed. */
+  const list = document.querySelector('[data-paginate]');
+  const pager = document.querySelector('[data-chalk-pages]');
+  if (list && pager) {
+    const per = Math.max(1, +list.dataset.paginate || 10);
+    const items = [...list.children];
+    const pages = Math.ceil(items.length / per);
+    if (pages > 1) {
+      const link = (n, text, label) => {
+        const a = document.createElement('a');
+        a.href = n === 1 ? location.pathname : `?page=${n}`;
+        a.textContent = text; a.dataset.page = n;
+        if (label) a.setAttribute('aria-label', label);
+        return a;
+      };
+      const off = text => Object.assign(document.createElement('span'), { textContent: text, className: 'is-off' });
+      const show = (n, scroll) => {
+        n = Math.min(pages, Math.max(1, n || 1));
+        items.forEach((li, i) => { li.hidden = Math.floor(i / per) + 1 !== n; });
+        pager.replaceChildren(n > 1 ? link(n - 1, '← Prev', 'Previous page') : off('← Prev'));
+        for (let p = 1; p <= pages; p++) {
+          const a = link(p, String(p), `Page ${p}`);
+          if (p === n) a.setAttribute('aria-current', 'page');
+          pager.append(a);
+        }
+        pager.append(n < pages ? link(n + 1, 'Next →', 'Next page') : off('Next →'));
+        if (scroll) list.closest('.chalkboard').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+        return n;
+      };
+      const fromUrl = () => +new URLSearchParams(location.search).get('page') || 1;
+      pager.hidden = false;
+      show(fromUrl(), false);
+      pager.addEventListener('click', e => {
+        const a = e.target.closest('a[data-page]');
+        if (!a) return;
+        e.preventDefault();
+        const n = show(+a.dataset.page, true);
+        history.pushState({ page: n }, '', n === 1 ? location.pathname : `?page=${n}`);
+      });
+      addEventListener('popstate', () => show(fromUrl(), false));
+    }
+  }
+
   /* Typewriter dialogue — a hidden copy of the full line reserves the space */
   const tw = document.querySelector("[data-typewriter]");
   if (tw && !reduce) {

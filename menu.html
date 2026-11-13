@@ -14,7 +14,7 @@ permalink: /menu/
   <div class="chalkboard">
     <section class="chalk-section">
       {% if site.posts.size > 0 %}
-      <ul class="chalk-list">
+      <ul class="chalk-list" data-paginate="10">
         {% for post in site.posts %}
         <li><a href="{{ post.url | relative_url }}"><span>{{ post.title }}</span><i aria-hidden="true"></i><time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: '%d.%m.%y' }}</time></a></li>
         {% endfor %}
@@ -23,6 +23,7 @@ permalink: /menu/
       <p class="chalk-empty">Sold out — coming soon.</p>
       {% endif %}
     </section>
+    <nav class="chalk-pages" data-chalk-pages aria-label="Menu pages" hidden></nav>
     <p class="chalk-footnote">~ more stories brewing — ask the barista ~</p>
   </div>
 </section>

@@ -237,6 +237,11 @@ img { max-width: 100%; height: auto; }
   grid-template-rows: 1fr auto;
   min-height: clamp(300px, 52vh, 480px);   /* a real board even with only a few stories */
 }
+.chalk-pages { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 6px 10px; font: 22px var(--mono); }
+.chalk-pages a, .chalk-pages span { color: #f1ead6; text-decoration: none; min-width: 32px; text-align: center; padding: 0 6px; border-radius: 4px; }
+.chalk-pages a:hover { color: var(--amber); }
+.chalk-pages [aria-current="page"] { border: 2px solid rgba(241, 234, 214, .7); }
+.chalk-pages .is-off { opacity: .35; }
 .chalk-footnote { margin: 0; text-align: center; font: 20px var(--mono); color: #9fb9ab; letter-spacing: .06em; opacity: .85; }
 .chalk-section h2 { font: 700 28px var(--display); margin: 0 0 12px; color: #fdf6e3; text-shadow: 0 0 1px rgba(255,255,255,.6); }
 .chalk-section h2 small { font: 20px var(--mono); color: #b8d4c5; letter-spacing: .04em; }

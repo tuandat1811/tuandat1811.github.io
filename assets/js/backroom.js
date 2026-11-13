@@ -214,6 +214,7 @@
   const NO_WRITE_HELP = `This token can’t write to ${REPO}. On GitHub, edit the token: ` +
     `Repository access → Only select repositories → ${REPO}; ` +
     `Permissions → Repository permissions → Contents: Read and write. Save, then unlock again.`;
+  const CACHE_NOTE = 'Your browser may keep showing the old page for up to 10 minutes — press Ctrl+F5 (or open a private window) to see it sooner.';
   const isNoWrite = err => err && (err.status === 403 || err.status === 404);
 
   /* `repo.permissions` describes the *account*, not the token, so probe write access for real:
@@ -409,7 +410,7 @@
       const res = await putFile(path, textToB64(buildFile(f)), `${current ? 'Update' : 'Publish'}: ${f.title}`, current && current.sha);
       current = { path, sha: res.content.sha }; dirty = false;
       ui.heading.textContent = 'Edit story'; ui.del.hidden = false; refreshPath();
-      say(ui.status, `Served! Live in ~1–2 minutes at ${postUrl(path)}`, 'ok');
+      say(ui.status, `Served! GitHub builds the site in ~1–2 minutes: ${postUrl(path)}. ${CACHE_NOTE}`, 'ok');
       await loadList();
       watchBuild(started, path);
     } catch (err) {
@@ -428,7 +429,7 @@
     try {
       await gh(`/contents/${encPath(current.path)}`, { method: 'DELETE', body: JSON.stringify({ message: `Remove: ${title}`, sha: current.sha, branch: BRANCH }) });
       dirty = false; current = null; newPost();
-      say(ui.status, `Removed “${title}”. The site updates in ~1–2 minutes.`, 'ok');
+      say(ui.status, `Removed “${title}”. GitHub rebuilds the site in ~1–2 minutes. ${CACHE_NOTE}`, 'ok');
       await loadList();
     } catch (err) { say(ui.status, isNoWrite(err) ? `Couldn’t delete. ${NO_WRITE_HELP}` : `Couldn’t delete: ${err.message}`, 'error'); }
     finally { busy(false); }
@@ -440,7 +441,7 @@
       await new Promise(r => setTimeout(r, 8000));
       let b; try { b = await gh('/pages/builds/latest'); } catch { return; }
       if (!b || new Date(b.created_at).getTime() < since - 5000) continue;
-      if (b.status === 'built') return say(ui.status, `Live now ✓ ${postUrl(path)}`, 'ok');
+      if (b.status === 'built') return say(ui.status, `Live now ✓ ${postUrl(path)} — if you still see the old page, press Ctrl+F5.`, 'ok');
       if (b.status === 'errored') return say(ui.status, `GitHub Pages build failed: ${(b.error && b.error.message) || 'see the repo’s Actions tab'}`, 'error');
     }
   }

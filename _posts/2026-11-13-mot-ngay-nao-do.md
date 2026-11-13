@@ -5,7 +5,7 @@ cover: "/assets/img/posts/2026-11-13-962fc20f-3c97-4a9b-b710-f7092acd21ae-vlue.j
 quote: "Một ngày nào đó nếu như em không còn thấy tôi nhìn về phía em nữa, thì mong em hãy tin rằng tôi đã yêu em nhiều hơn những gì em biết."
 ---
 
-Em sẽ không nghe cái này đâu. Tôi biết. Cho nên mới nói được.
+Em sẽ không đọc cái này đâu. Tôi biết. Cho nên mới viết được.
 
 Tôi bắt đầu bằng chuyện nhìn, vì cả câu nằm ở đó.
 

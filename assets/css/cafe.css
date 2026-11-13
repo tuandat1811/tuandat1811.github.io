@@ -400,3 +400,5 @@ body.br-noscroll { overflow: hidden; }
 .br-editor-box .toastui-editor-toolbar-item-wrapper { vertical-align: top; }
 .br-editor-box .br-embed-btn { display: block; margin: 0; background: none; font-size: 13px; color: #555; line-height: 1; padding: 0; }
 .br-editor-box .br-embed-btn:hover { color: var(--ink); }
+.br-leave { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 16px 0 0; }
+.br-leave .br-link { margin-top: 0; }

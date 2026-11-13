@@ -149,7 +149,14 @@
   /* ---------- storage (token never leaves this browser except to api.github.com) ---------- */
   const store = {
     get() { try { return sessionStorage.getItem(KEY) || localStorage.getItem(KEY); } catch { return null; } },
-    set(t, remember) { try { (remember ? localStorage : sessionStorage).setItem(KEY, t); } catch { /* private mode */ } },
+    // "Remember on this device" -> localStorage (survives closing the browser); otherwise this tab only.
+    set(t, remember) {
+      try {
+        (remember ? localStorage : sessionStorage).setItem(KEY, t);
+        (remember ? sessionStorage : localStorage).removeItem(KEY);
+      } catch { /* private mode: storage unavailable */ }
+    },
+    remembered() { try { return !!localStorage.getItem(KEY); } catch { return false; } },
     clear() { try { sessionStorage.removeItem(KEY); localStorage.removeItem(KEY); } catch { /* ignore */ } },
   };
 
@@ -258,7 +265,8 @@
 
   $('[data-lock]').addEventListener('click', () => {
     if (dirty && !confirm('You have unsaved changes. Leave anyway?')) return;
-    store.clear(); token = null; dirty = false; ui.whoami.textContent = 'Locked. See you next shift.'; show('login');
+    if (store.remembered() && !confirm('Forget the saved key on this device? You will need to paste the token again next time.')) return;
+    store.clear(); token = null; dirty = false; ui.whoami.textContent = 'Locked — the key is forgotten on this device.'; show('login');
   });
 
   /* ---------- post list ---------- */
@@ -448,9 +456,19 @@
 
   /* ---------- start ---------- */
   const saved = store.get();
-  if (saved) unlock(saved, false).catch(() => {
-    store.clear(); token = null; show('login');
-    ui.whoami.textContent = 'Your saved key no longer works — please unlock again.';
-  });
-  else show('login');
+  if (saved) {
+    show('login');
+    say($('[data-login-msg]'), 'Using your saved key…');
+    unlock(saved, store.remembered()).then(() => say($('[data-login-msg]'), '')).catch(err => {
+      token = null; show('login');
+      // Forget the key only when GitHub says it is invalid/expired; a network hiccup or a missing
+      // permission keeps it, so fixing the token on GitHub (same value) or retrying is enough.
+      if (err.status === 401) {
+        store.clear();
+        say($('[data-login-msg]'), 'Your saved key has expired or was revoked — please paste a new one.', 'error');
+      } else {
+        say($('[data-login-msg]'), `Couldn’t use your saved key: ${err.message} — reload the page to try again.`, 'error');
+      }
+    });
+  } else show('login');
 })();

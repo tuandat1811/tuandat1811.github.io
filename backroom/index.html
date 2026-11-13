@@ -33,7 +33,7 @@ csp: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' ht
         <li><b>Permissions → Repository permissions → Contents:</b> change it to <i>Read and write</i> (it is not set by default — without it, Deploy fails with “Resource not accessible”). Optional: Pages → <i>Read</i> (to see build status).</li>
         <li>Set an expiration date, generate, and paste it here.</li>
       </ol>
-      <p>The token stays in this browser only — this tab by default, or this device if you tick “Remember”. Lock up when you're done on a shared computer.</p>
+      <p>The token stays in this browser only — this tab by default, or this device if you tick “Remember”. “Back to the café” keeps it; “Lock up (forget key)” erases it — use that on a shared computer.</p>
     </details>
   </div>
 
@@ -45,7 +45,10 @@ csp: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' ht
         <button class="btn btn--small" type="button" data-new>+ New story</button>
       </div>
       <ul data-post-list><li class="br-muted">Loading…</li></ul>
-      <button class="br-link" type="button" data-lock>Lock up &amp; leave</button>
+      <p class="br-leave">
+        <a class="br-link" href="{{ '/' | relative_url }}">← Back to the café</a>
+        <button class="br-link" type="button" data-lock>Lock up (forget key)</button>
+      </p>
     </aside>
 
     <div class="br-card br-editor">

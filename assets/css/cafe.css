@@ -410,3 +410,11 @@ body.br-noscroll { overflow: hidden; }
 .br-list li button:hover .br-item__edit, .br-list li button[aria-current="true"] .br-item__edit { opacity: 1; }
 .br-list li button:hover { background: #fff6e6; }
 .br-view { margin: 0; font-size: 14px; }
+/* image size toolbar (back room editor) */
+.br-imgsize { position: absolute; z-index: 35; display: flex; align-items: center; gap: 4px; padding: 4px 6px; background: var(--night); border: 2px solid var(--amber); border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.35); }
+.br-imgsize span { font: 600 12px var(--display); color: var(--muted); padding: 0 4px; }
+.br-imgsize button { font: 600 13px var(--display); color: var(--cream); background: var(--plum); border: 0; border-radius: 5px; padding: 3px 9px; cursor: pointer; }
+.br-imgsize button:hover { background: var(--wood-light); }
+.br-imgsize button[aria-pressed="true"] { background: var(--amber); color: var(--ink); }
+.br-editor-box .ProseMirror img { cursor: pointer; max-width: 100%; }
+.br-editor-box .ProseMirror img.ProseMirror-selectednode { outline: 3px solid var(--amber); }

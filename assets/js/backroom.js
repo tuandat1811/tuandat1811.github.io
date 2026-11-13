@@ -64,6 +64,85 @@
     if (editor) return;
     editor = createEditor();
     editor.on('change', () => { if (!filling) dirty = true; });
+    setupImageSizing();
+  }
+
+  /* ---------- image sizes ----------
+     Stored as a #w=NN fragment on the image URL (e.g. photo.jpg#w=50 = 50% wide): it survives
+     Markdown and Jekyll untouched and is ignored when the image is downloaded. embeds.js applies it
+     on the site and in Preview; here we apply it inside the editor and offer S/M/L/Full buttons. */
+  const SIZES = [['S', 25], ['M', 50], ['L', 75], ['Full', 100]];
+  const widthOf = src => { const m = String(src || '').match(/#w=(\d{1,3})$/); return m ? Math.min(100, Math.max(10, +m[1])) : 100; };
+  const withWidth = (src, w) => String(src).replace(/#w=\d{1,3}$/, '') + (w >= 100 ? '' : `#w=${w}`);
+
+  function setupImageSizing() {
+    const box = $('[data-editor]');
+    box.style.position = 'relative';
+    const bar = document.createElement('div');
+    bar.className = 'br-imgsize'; bar.hidden = true;
+    bar.setAttribute('role', 'toolbar'); bar.setAttribute('aria-label', 'Image size');
+    const label = document.createElement('span'); label.textContent = 'Size';
+    bar.append(label);
+    for (const [name, w] of SIZES) {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = name; b.dataset.w = w;
+      b.title = `${w}% of the page width`;
+      bar.append(b);
+    }
+    box.append(bar);
+    let target = null;   // the <img> being sized
+
+    const view = () => editor.isWysiwygMode() && editor.wwEditor && editor.wwEditor.view;
+    const paint = () => {   // show each image at its stored width inside the editor
+      const pm = box.querySelector('.toastui-editor-ww-container .ProseMirror');
+      if (pm) pm.querySelectorAll('img:not(.ProseMirror-separator)').forEach(img => {
+        const w = widthOf(img.getAttribute('src'));
+        img.style.width = w < 100 ? `${w}%` : '';
+      });
+    };
+    const place = () => {
+      if (!target || !target.isConnected) { hide(); return; }
+      const r = target.getBoundingClientRect(), base = box.getBoundingClientRect();
+      const tools = box.querySelector('.toastui-editor-toolbar');
+      // keep the bar on the visible part of the image: below the editor toolbar and the site header
+      const visTop = Math.max(r.top, tools ? tools.getBoundingClientRect().bottom : base.top, 90) + 8;
+      const top = Math.min(visTop, Math.max(r.top + 8, r.bottom - 48));
+      bar.style.left = `${Math.max(8, r.left - base.left + 8)}px`;
+      bar.style.top = `${top - base.top}px`;
+      const w = widthOf(target.getAttribute('src'));
+      bar.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.w === w)));
+    };
+    const show = img => { target = img; bar.hidden = false; place(); };
+    function hide() { target = null; bar.hidden = true; }
+
+    box.addEventListener('click', e => {
+      const img = e.target.closest('.ProseMirror img:not(.ProseMirror-separator)');
+      if (img) show(img); else if (!bar.contains(e.target)) hide();
+    });
+    bar.addEventListener('mousedown', e => e.preventDefault());   // keep the editor's selection
+    bar.addEventListener('click', e => {
+      const btn = e.target.closest('button[data-w]'); const v = view();
+      if (!btn || !target || !v) return;
+      let pos; try { pos = v.posAtDOM(target, 0); } catch { return; }
+      const doc = v.state.doc;
+      const at = [pos, pos - 1].find(p => p >= 0 && doc.nodeAt(p) && doc.nodeAt(p).type.name === 'image');
+      if (at === undefined) return;
+      const node = doc.nodeAt(at);
+      v.dispatch(v.state.tr.setNodeMarkup(at, null, { ...node.attrs, imageUrl: withWidth(node.attrs.imageUrl, +btn.dataset.w) }));
+      dirty = true;
+      requestAnimationFrame(() => {   // the editor redraws the image; find it again and keep the bar on it
+        paint();
+        const imgs = [...box.querySelectorAll('.ProseMirror img:not(.ProseMirror-separator)')];
+        const again = imgs.find(i => { try { return v.posAtDOM(i, 0) === pos; } catch { return false; } });
+        if (again) show(again); else hide();
+      });
+    });
+    const pm = box.querySelector('.toastui-editor-ww-container .ProseMirror');
+    if (pm) new MutationObserver(() => { paint(); if (target) place(); })
+      .observe(pm, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
+    box.querySelector('.toastui-editor-ww-container')?.addEventListener('scroll', () => target && place(), true);
+    addEventListener('scroll', () => target && place(), { passive: true });
+    editor.on('changeMode', hide);
+    paint();
   }
 
   /* Embeds: a supported link alone on its own line becomes a player on the site (see embeds.js). */
@@ -385,7 +464,10 @@
       ui.preview.append(aside);
     }
     const prose = el('div', 'prose'); prose.innerHTML = html;
-    prose.querySelectorAll('img').forEach(img => { const b = blobs.get(img.getAttribute('src')); if (b) img.src = b; });
+    prose.querySelectorAll('img').forEach(img => {   // not uploaded yet: show the local copy, keep any #w= size
+      const [base, frag] = String(img.getAttribute('src')).split(/(?=#)/);
+      const b = blobs.get(base); if (b) img.src = b + (frag || '');
+    });
     ui.preview.append(prose);
     if (window.cafeEmbeds) window.cafeEmbeds.enhance(prose);
   }

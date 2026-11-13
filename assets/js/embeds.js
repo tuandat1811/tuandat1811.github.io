@@ -80,9 +80,18 @@
     return fig;
   }
 
+  /** Images sized in the back room carry #w=NN (percent of the text width) on their URL. */
+  function sizeImages(root) {
+    root.querySelectorAll('img').forEach(img => {
+      const m = String(img.getAttribute('src') || '').match(/#w=(\d{1,3})$/);
+      if (m) { img.style.width = `${Math.min(100, Math.max(10, +m[1]))}%`; img.classList.add('is-sized'); }
+    });
+  }
+
   /** Swap every paragraph that holds nothing but a supported link for a player. */
   function enhance(root) {
     if (!root) return;
+    sizeImages(root);
     root.querySelectorAll('p').forEach(p => {
       if (p.closest('li, blockquote, table, .embed')) return;
       const nodes = [...p.childNodes].filter(n => !(n.nodeType === 3 && !n.textContent.trim()) && n.nodeName !== 'BR');

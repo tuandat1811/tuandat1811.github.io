@@ -69,6 +69,7 @@
   function open(show) {
     ui.panel.hidden = !show;
     ui.toggle.setAttribute('aria-expanded', String(show));
+    if (!show) say('');   // the barista's last remark belongs to that moment, not the next visit to the panel
     if (show && !frame) ui.input.focus();
   }
 

@@ -1,6 +1,6 @@
 # What the barista says when someone walks in (home page dialogue box).
 # One line is picked at random on every visit, from "anytime" plus the group for the
-# current time in Vietnam (GMT+7). Clicking the box after a line finishes shows another.
+# current time in Vietnam (GMT+7). Refresh the page to hear a new one.
 # Add, edit or remove lines freely — keep each one to a sentence or three.
 
 anytime:

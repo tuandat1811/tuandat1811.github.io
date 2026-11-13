@@ -124,7 +124,7 @@
   /* Barista dialogue: a fresh line on every visit, picked from _data/barista.yml.
      Lines for the current time in Vietnam (morning / afternoon / evening / closed) come up more
      often; the last few lines shown are skipped so returning visitors hear something new.
-     Click (or Enter/Space) skips the typing, then asks for another line. */
+     Clicking the box only skips the typing; a new line comes on the next visit or refresh. */
   const tw = document.querySelector('[data-typewriter]');
   if (tw) {
     const box = tw.closest('.dialogue');
@@ -171,13 +171,7 @@
     };
     say(all.length ? pick() : fallback, 500);
 
-    if (box && all.length > 1) {
-      box.classList.add('is-chatty');
-      box.tabIndex = 0;
-      box.title = 'Click for another word with the barista';
-      const next = () => (typing() ? finish() : say(pick(), 120));
-      box.addEventListener('click', next);
-      box.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); next(); } });
-    } else if (box) box.addEventListener('click', finish);
+    // clicking only skips the typing animation; a new line comes with the next visit/refresh
+    if (box) box.addEventListener('click', () => { if (typing()) finish(); });
   }
 })();

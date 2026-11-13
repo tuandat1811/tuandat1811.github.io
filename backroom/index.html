@@ -5,7 +5,7 @@ permalink: /backroom/
 sitemap: false
 noindex: true
 body_class: backroom-page
-csp: "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src https://api.github.com; object-src 'none'; base-uri 'none'; form-action 'none'"
+csp: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src https://api.github.com; object-src 'none'; base-uri 'none'; form-action 'none'"
 ---
 <section class="wrap backroom" data-backroom data-repo="{{ site.admin.repo }}" data-branch="{{ site.admin.branch | default: 'main' }}" data-site="{{ site.url }}{{ site.baseurl }}">
   <header class="section-head backroom__head">
@@ -69,23 +69,32 @@ csp: "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-
         </div>
       </div>
 
-      <div class="br-tabs" role="tablist">
-        <button type="button" role="tab" aria-selected="true" data-tab="write">Write</button>
-        <button type="button" role="tab" aria-selected="false" data-tab="preview">Preview</button>
-        <label class="btn btn--ghost btn--small br-tabs__img">Insert image<input type="file" accept="image/*" data-body-file hidden></label>
+      <div class="br-field br-field--wide br-story">
+        <span>Story</span>
+        <div class="br-editor-box" data-editor></div>
       </div>
-      <textarea name="body" class="br-body" data-panel="write" placeholder="Write your story in Markdown…" spellcheck="false"></textarea>
-      <div class="paper br-preview" data-panel="preview" hidden></div>
 
       <div class="br-actions">
+        <button class="btn btn--ghost" type="button" data-preview-open>Preview 👀</button>
         <button class="btn" type="button" data-deploy>Deploy ☕</button>
         <button class="btn btn--danger" type="button" data-delete hidden>Delete</button>
         <p class="br-msg" data-status role="status" aria-live="polite"></p>
       </div>
     </div>
   </div>
+
+  <!-- Full-page preview -->
+  <div class="br-overlay" data-overlay role="dialog" aria-modal="true" aria-label="Preview" hidden>
+    <div class="br-overlay__bar">
+      <span>Preview — this is how the story will look on the site</span>
+      <button class="btn btn--small" type="button" data-preview-close>Close ✕</button>
+    </div>
+    <article class="wrap paper" data-preview></article>
+  </div>
 </section>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js" integrity="sha384-/TQbtLCAerC3jgaim+N78RZSDYV7ryeoBCVqTuzRrFec2akfBkHS7ACQ3PQhvMVi" crossorigin="anonymous" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js" integrity="sha384-+VfUPEb0PdtChMwmBcBmykRMDd+v6D/oFmB3rZM/puCMDYcIvF968OimRh4KQY9a" crossorigin="anonymous" defer></script>
+<link rel="stylesheet" href="{{ '/assets/vendor/toastui-editor-3.2.2.min.css' | relative_url }}">
+<script src="{{ '/assets/vendor/toastui-editor-all-3.2.2.min.js' | relative_url }}" defer></script>
+<script src="{{ '/assets/vendor/marked-12.0.2.min.js' | relative_url }}" defer></script>
+<script src="{{ '/assets/vendor/purify-3.1.6.min.js' | relative_url }}" defer></script>
 <script src="{{ '/assets/js/backroom.js' | relative_url }}" defer></script>

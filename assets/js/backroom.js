@@ -16,18 +16,83 @@
   const views = { login: $('[data-view="login"]'), desk: $('[data-view="desk"]') };
   const form = {
     title: $('[name="title"]'), date: $('[name="date"]'), time: $('[name="time"]'),
-    drink: $('[name="drink"]'), quote: $('[name="quote"]'), cover: $('[name="cover"]'), body: $('[name="body"]'),
+    drink: $('[name="drink"]'), quote: $('[name="quote"]'), cover: $('[name="cover"]'),
   };
   const ui = {
     list: $('[data-post-list]'), status: $('[data-status]'), path: $('[data-path]'), heading: $('[data-editor-title]'),
-    deploy: $('[data-deploy]'), del: $('[data-delete]'), preview: $('[data-panel="preview"]'), whoami: $('[data-whoami]'),
+    deploy: $('[data-deploy]'), del: $('[data-delete]'), preview: $('[data-preview]'), overlay: $('[data-overlay]'), whoami: $('[data-whoami]'),
+    closePreview: $('[data-preview-close]'),
   };
+  document.body.append(ui.overlay); // lift the preview above the site header
 
   let token = null;
   let current = null;          // { path, sha } when editing an existing post
   let dirty = false;
   const pending = new Map();   // '/assets/img/posts/x.jpg' -> File (not uploaded yet)
-  const blobs = new Map();     // same key -> object URL for previews
+  const blobs = new Map();     // same key -> object URL shown while editing
+  let filling = false;         // true while we load text into the editor (not a user edit)
+
+  /* ---------- the visual editor (Word-like; stores Markdown underneath) ---------- */
+  const editor = new window.toastui.Editor({
+    el: $('[data-editor]'),
+    height: '560px',
+    initialEditType: 'wysiwyg',
+    previewStyle: 'tab',
+    hideModeSwitch: false,
+    usageStatistics: false,
+    autofocus: false,
+    placeholder: 'Write your story here… Use the toolbar for headings, bold, lists, quotes and images.',
+    toolbarItems: [['heading', 'bold', 'italic', 'strike'], ['hr', 'quote'], ['ul', 'ol'], ['table', 'image', 'link'], ['code', 'codeblock']],
+    hooks: {
+      addImageBlobHook(blob, callback) {
+        const staged = stageImage(blob);
+        if (staged) callback(blobs.get(staged.key), staged.alt);
+      },
+    },
+  });
+  editor.on('change', () => { if (!filling) dirty = true; });
+  const toKeys = md => { for (const [key, url] of blobs) md = md.split(url).join(key); return md; };   // blob: URLs -> real paths
+  const toBlobs = md => { for (const [key, url] of blobs) md = md.split(key).join(url); return md; };
+  /* The visual editor separates paragraphs with a single newline, which Jekyll (kramdown) would
+     glue into one paragraph. Put a blank line between blocks, but keep lists, tables, quotes and code intact. */
+  const isFence = l => /^\s*(```|~~~)/.test(l);
+  const isList = l => /^\s*([-*+]|\d+[.)])\s/.test(l);
+  const isIndented = l => /^\s+\S/.test(l);
+  const isTable = l => /^\s*\|/.test(l);
+  const isQuote = l => /^\s*>/.test(l);
+  const isPlain = l => l.trim() && !isFence(l) && !isList(l) && !isIndented(l) && !isTable(l) && !isQuote(l);
+  function normalizeMd(md) {
+    const lines = md.replace(/\r\n/g, '\n').split('\n');
+    const out = [];
+    let fence = false;
+    for (let i = 0; i < lines.length; i++) {
+      const a = lines[i], b = lines[i + 1];
+      out.push(a);
+      if (isFence(a)) fence = !fence;
+      if (fence || b === undefined || !a.trim() || !b.trim()) continue;
+      if (isTable(a) && isTable(b)) continue;
+      if ((isList(a) || isIndented(a)) && (isList(b) || isIndented(b))) continue;
+      if (isQuote(a) && isQuote(b)) { out.push('>'); continue; }
+      out.push('');
+    }
+    return out.join('\n');
+  }
+  /* The reverse, used when loading a saved story: the editor shows each blank line as an empty
+     paragraph, so drop the single blank line between two plain paragraphs. */
+  function denormalizeMd(md) {
+    const lines = md.replace(/\r\n/g, '\n').split('\n');
+    const out = [];
+    let fence = false;
+    for (let i = 0; i < lines.length; i++) {
+      const a = lines[i];
+      if (isFence(a)) fence = !fence;
+      if (!fence && !a.trim() && i > 0 && isPlain(lines[i - 1]) && isPlain(lines[i + 1] || '')) continue;
+      out.push(a);
+    }
+    return out.join('\n');
+  }
+  const getBody = () => toKeys(normalizeMd(editor.getMarkdown()));
+  const setBody = md => { filling = true; editor.setMarkdown(toBlobs(denormalizeMd(md || '')), false); filling = false; };
 
   /* ---------- storage (token never leaves this browser except to api.github.com) ---------- */
   const store = {
@@ -147,18 +212,18 @@
     form.drink.value = meta.drink || '';
     form.quote.value = meta.quote || '';
     form.cover.value = meta.cover || '';
-    form.body.value = body || '';
+    setBody(body);
     const d = String(meta.date || '').match(/(\d{4}-\d{2}-\d{2})(?:[ T](\d{2}:\d{2}))?/);
     if (d) { form.date.value = d[1]; form.time.value = d[2] || '12:00'; }
     else { const now = new Date(Date.now() - 2 * 60000); form.date.value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`; form.time.value = `${pad(now.getHours())}:${pad(now.getMinutes())}`; }
-    dirty = false; refreshPath(); renderPreview();
+    dirty = false; refreshPath();
   }
 
   function newPost() {
     if (dirty && !confirm('Discard unsaved changes?')) return;
     current = null; pending.clear();
     ui.heading.textContent = 'New story'; ui.del.hidden = true;
-    fill({}, ''); say(ui.status, ''); markCurrent(); setTab('write');
+    fill({}, ''); say(ui.status, ''); markCurrent();
   }
   $('[data-new]').addEventListener('click', newPost);
 
@@ -179,61 +244,59 @@
   function refreshPath() { ui.path.textContent = current ? current.path : newPath(); }
 
   for (const el of Object.values(form)) el.addEventListener('input', () => { dirty = true; if (!current) refreshPath(); });
-  form.body.addEventListener('input', () => { if (!ui.preview.hidden) renderPreview(); });
   addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 
-  /* ---------- write / preview ---------- */
-  function setTab(name) {
-    root.querySelectorAll('[data-tab]').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === name)));
-    root.querySelectorAll('[data-panel]').forEach(p => { p.hidden = p.dataset.panel !== name; });
-    if (name === 'preview') renderPreview();
-  }
-  root.querySelectorAll('[data-tab]').forEach(t => t.addEventListener('click', () => setTab(t.dataset.tab)));
-
+  /* ---------- full-page preview ---------- */
   function renderPreview() {
-    if (!window.marked || !window.DOMPurify) { ui.preview.textContent = 'Preview tools are still loading…'; return; }
-    const html = window.DOMPurify.sanitize(window.marked.parse(form.body.value || '*Nothing in the cup yet.*'));
+    const body = getBody();
+    const html = window.DOMPurify.sanitize(window.marked.parse(body || '*Nothing in the cup yet.*'));
+    const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
     ui.preview.innerHTML = '';
-    const head = document.createElement('header'); head.className = 'paper__head';
-    if (form.drink.value) { const k = document.createElement('p'); k.className = 'kicker'; k.textContent = `☕ ${form.drink.value}`; head.append(k); }
-    const h = document.createElement('h1'); h.className = 'paper__title'; h.textContent = form.title.value || 'Untitled'; head.append(h);
+    const head = el('header', 'paper__head');
+    if (form.drink.value.trim()) { const k = el('p', 'kicker'); k.append(el('span', null, `☕ ${form.drink.value.trim()}`)); head.append(k); }
+    head.append(el('h1', 'paper__title', form.title.value.trim() || 'Untitled'));
+    const words = body.replace(/[#>*_[]()!`-]/g, ' ').split(/s+/).filter(Boolean).length;
+    const [y, m, d] = (form.date.value || '').split('-');
+    head.append(el('p', 'paper__meta', `Brewed ${d && m && y ? `${d}.${m}.${y}` : '—'} · ${Math.floor(words / 200) + 1} min sip`));
     ui.preview.append(head);
-    if (form.cover.value) { const img = document.createElement('img'); img.className = 'paper__cover'; img.alt = ''; img.src = blobs.get(form.cover.value) || form.cover.value; ui.preview.append(img); }
-    if (form.quote.value) {
-      const aside = document.createElement('aside'); aside.className = 'dialogue dialogue--inline';
-      const name = document.createElement('span'); name.className = 'dialogue__name'; name.textContent = 'Barista';
-      const p = document.createElement('p'); p.textContent = form.quote.value; aside.append(name, p); ui.preview.append(aside);
+    const cover = form.cover.value.trim();
+    if (cover) { const img = el('img', 'paper__cover'); img.alt = ''; img.src = blobs.get(cover) || cover; ui.preview.append(img); }
+    if (form.quote.value.trim()) {
+      const aside = el('aside', 'dialogue dialogue--inline');
+      aside.append(el('span', 'dialogue__name', 'Barista'), el('p', null, form.quote.value.trim()));
+      ui.preview.append(aside);
     }
-    const prose = document.createElement('div'); prose.className = 'prose'; prose.innerHTML = html;
+    const prose = el('div', 'prose'); prose.innerHTML = html;
     prose.querySelectorAll('img').forEach(img => { const b = blobs.get(img.getAttribute('src')); if (b) img.src = b; });
     ui.preview.append(prose);
   }
+  function openPreview() {
+    renderPreview();
+    ui.overlay.hidden = false; document.body.classList.add('br-noscroll');
+    ui.overlay.scrollTop = 0; ui.closePreview.focus();
+  }
+  function closePreview() { ui.overlay.hidden = true; document.body.classList.remove('br-noscroll'); $('[data-preview-open]').focus(); }
+  $('[data-preview-open]').addEventListener('click', openPreview);
+  ui.closePreview.addEventListener('click', closePreview);
+  addEventListener('keydown', e => { if (e.key === 'Escape' && !ui.overlay.hidden) closePreview(); });
 
   /* ---------- images (kept locally until Deploy) ---------- */
   function stageImage(file) {
     if (!file) return null;
     if (!file.type.startsWith('image/')) { say(ui.status, 'That file isn’t an image.', 'error'); return null; }
     if (file.size > MAX_IMG) { say(ui.status, `Image is too large (max ${MAX_IMG / 1048576} MB).`, 'error'); return null; }
-    const ext = (file.name.match(/\.([a-z0-9]+)$/i) || [, 'jpg'])[1].toLowerCase();
-    const base = slugify(file.name.replace(/\.[^.]+$/, ''));
+    const fname = file.name || `pasted.${(file.type.split('/')[1] || 'png').replace('jpeg', 'jpg')}`;
+    const ext = (fname.match(/\.([a-z0-9]+)$/i) || [, 'jpg'])[1].toLowerCase();
+    const base = slugify(fname.replace(/\.[^.]+$/, ''));
     const stamp = new Date().toISOString().slice(0, 10);
     const key = `/${IMG_DIR}/${stamp}-${base}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
     pending.set(key, file); blobs.set(key, URL.createObjectURL(file)); dirty = true;
     say(ui.status, `Image ready — it will be uploaded when you deploy.`);
-    return { key, alt: file.name.replace(/\.[^.]+$/, '') };
+    return { key, alt: fname.replace(/\.[^.]+$/, '') };
   }
-  $('[data-body-file]').addEventListener('change', e => {
-    const staged = stageImage(e.target.files[0]); e.target.value = '';
-    if (!staged) return;
-    const ta = form.body, md = `\n![${staged.alt}](${staged.key})\n`;
-    const at = ta.selectionStart ?? ta.value.length;
-    ta.value = ta.value.slice(0, at) + md + ta.value.slice(ta.selectionEnd ?? at);
-    ta.focus(); ta.selectionStart = ta.selectionEnd = at + md.length;
-    renderPreview();
-  });
   $('[data-cover-file]').addEventListener('change', e => {
     const staged = stageImage(e.target.files[0]); e.target.value = '';
-    if (staged) { form.cover.value = staged.key; renderPreview(); }
+    if (staged) { form.cover.value = staged.key; dirty = true; }
   });
 
   /* ---------- deploy / delete ---------- */
@@ -241,7 +304,7 @@
 
   ui.deploy.addEventListener('click', async () => {
     const f = Object.fromEntries(Object.entries(form).map(([k, el]) => [k, el.value.trim()]));
-    f.body = form.body.value;
+    f.body = getBody();
     if (!f.title) return say(ui.status, 'Every story needs a title.', 'error');
     if (!f.body.trim()) return say(ui.status, 'The cup is empty — write something first.', 'error');
     if (!/^\d{4}-\d{2}-\d{2}$/.test(f.date) || !/^\d{2}:\d{2}$/.test(f.time)) return say(ui.status, 'Please set a date and time.', 'error');
@@ -304,6 +367,9 @@
 
   /* ---------- start ---------- */
   const saved = store.get();
-  if (saved) unlock(saved, false).catch(() => { store.clear(); token = null; show('login'); });
+  if (saved) unlock(saved, false).catch(() => {
+    store.clear(); token = null; show('login');
+    ui.whoami.textContent = 'Your saved key no longer works — please unlock again.';
+  });
   else show('login');
 })();

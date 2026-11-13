@@ -25,6 +25,7 @@ body_class: home
 </section>
 
 <section class="wrap orders" aria-labelledby="tonight">
+  <span hidden data-freshness data-src="{{ '/freshness.json' | relative_url }}" data-count="{{ site.posts.size }}" data-latest="{{ site.posts.first.url }}"></span>
   <header class="section-head">
     <h2 id="tonight">Tonight's orders</h2>
     <p>Freshly brewed stories, newest first.</p>

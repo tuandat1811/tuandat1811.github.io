@@ -61,6 +61,23 @@
     });
   }
 
+  /* Fresh menu: GitHub Pages lets browsers cache pages for 10 minutes, so a list page can be
+     stale right after a new story is served. Compare with /freshness.json and reload once if needed. */
+  const fresh = document.querySelector('[data-freshness]');
+  if (fresh && window.fetch) {
+    const url = `${fresh.dataset.src}?t=${Date.now()}`;   // unique URL: skips browser and CDN caches
+    fetch(url, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(async data => {
+      if (!data) return;
+      const shown = `${fresh.dataset.count}|${fresh.dataset.latest}`;
+      const live = `${data.count}|${data.latest}`;
+      if (shown === live) return;
+      const key = 'cafe.refreshed:' + location.pathname;
+      try { if (sessionStorage.getItem(key) === live) return; sessionStorage.setItem(key, live); } catch { /* no storage: still try once */ }
+      await fetch(location.href, { cache: 'reload' }).catch(() => {});   // replace the cached copy
+      location.reload();
+    }).catch(() => {});
+  }
+
   /* Typewriter dialogue — a hidden copy of the full line reserves the space */
   const tw = document.querySelector("[data-typewriter]");
   if (tw && !reduce) {

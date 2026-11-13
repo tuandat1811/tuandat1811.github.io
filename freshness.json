@@ -1,0 +1,6 @@
+---
+layout: null
+permalink: /freshness.json
+sitemap: false
+---
+{"count": {{ site.posts.size }}, "latest": {{ site.posts.first.url | default: "" | jsonify }}}

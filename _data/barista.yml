@@ -1,0 +1,74 @@
+# What the barista says when someone walks in (home page dialogue box).
+# One line is picked at random on every visit, from "anytime" plus the group for the
+# current time in Vietnam (GMT+7). Clicking the box after a line finishes shows another.
+# Add, edit or remove lines freely — keep each one to a sentence or three.
+
+anytime:
+  - "Ah, welcome in. Rain's been falling all night again… Grab a stool by the window. I'll brew you something — and maybe a story to go with it."
+  - "Oh, a new face. Sit anywhere you like. The corner seat is the warmest, if you ask me."
+  - "Welcome back. Or is it your first time? Either way, the kettle doesn't mind."
+  - "Shake off the rain and come in. Coffee first, questions later."
+  - "You look like someone carrying a story. Set it down for a while — the counter can hold it."
+  - "The usual? Ha, I'm joking. I don't know your usual yet. Give me a few more visits."
+  - "Mind the puddle by the door. I keep meaning to fix that step… and keep brewing coffee instead."
+  - "There's a new story on the board tonight. Or maybe an old one that finally found its words."
+  - "Sit, sit. The stories here are best read slowly, like coffee that's still too hot."
+  - "I've got a pot of phin dripping. It takes its time — same as a good story."
+  - "Hm? Oh, the music. Just an old record. It skips on the second song, but I've grown to like it."
+  - "If you came for advice, I only have two kinds: drink water, and finish what you started."
+  - "Every cup in this place has a chip in it somewhere. Makes them easier to tell apart."
+  - "I don't do latte art. I do latte honesty. It's a circle, mostly."
+  - "Some people come here to talk. Some come to be quiet. Both are on the menu."
+  - "The stories on the board? Written by someone who drinks too much coffee and sleeps too little. I'd know."
+  - "Pull up a chair. The wifi's slow, which is the best feature of this café."
+  - "Welcome in. Leave your umbrella by the door — it'll be there when you're ready to go back out."
+  - "You picked a good night. The rain's soft, the coffee's strong, and nobody's in a hurry."
+  - "I keep a notebook behind the counter for things customers say. Don't worry, I only write down the good ones."
+  - "Sugar's in the jar, milk's in the little pot, stories are on the board. Help yourself."
+  - "Whatever brought you in — the rain, the smell of coffee, or plain luck — I'm glad it did."
+  - "Take your time. Nothing in here is going anywhere, least of all me."
+  - "Bạc xỉu, cà phê muối, or just hot water and a long sit? All valid choices."
+  - "Funny thing about cafés: people say the truest things to strangers over cheap coffee."
+  - "That window seat has heard a lot of confessions. It's very good at keeping them."
+  - "I brewed one cup too many earlier. Looks like it was meant for you."
+  - "Don't mind the cat-shaped dent in the cushion. There's no cat. It's a long story."
+  - "Read one story, or read them all. The refill policy is generous."
+  - "Some nights the stories write themselves. Tonight it's me and a stubborn pen."
+
+morning:
+  - "Morning! You're early. The coffee is too — it's still waking up."
+  - "Ah, an early bird. The first cup of the day is always the most honest one."
+  - "Good morning. The light hits the counter just right around now. Stay a bit."
+  - "Up already? Here — something hot before the city gets loud."
+  - "Morning shift. I'm two cups in and finally starting to feel like a person."
+  - "Sun's out for once. Don't get used to it — the rain always comes back by evening."
+
+afternoon:
+  - "Afternoon slump? Say no more. Something strong, coming right up."
+  - "Ah, the lull between lunch and evening. My favourite hour to read behind the counter."
+  - "Afternoon. The regulars haven't arrived yet, so you get the good chair."
+  - "Hiding from work? Your secret's safe here. Mostly."
+  - "There's a slice of afternoon light on the second table. Claim it before someone else does."
+  - "Midday tea or another coffee? Careful, the third cup is where the philosophy starts."
+
+evening:
+  - "Evening. The lamps just came on — this is when the café starts to feel like itself."
+  - "Long day? Sit down. The evening crowd here is quiet and doesn't ask questions."
+  - "The sky's going purple out there. Perfect hour for a story and something warm."
+  - "Last orders aren't for a while yet. Relax — nobody rushes at this hour."
+  - "Ah, the after-work crowd. Shoes off, figuratively. Please keep them on literally."
+  - "Dusk always makes people a little nostalgic. Good time to read something old."
+
+closed:
+  - "We're technically closed… but the lights were still on, and so are you. Come in."
+  - "Couldn't sleep either? Grab a seat. I'll put the kettle back on."
+  - "It's late. The chairs are already up on the tables, but I can take one down for you."
+  - "Shh — after hours the stories read differently. Quieter. More honest."
+  - "Closed sign's up, but the door was never locked for readers. Don't tell anyone."
+  - "Midnight coffee is a terrible idea. Here's yours."
+  - "The rain sounds louder when the café is empty. Stay and keep it company."
+  - "Night owl? Me too. We should start a club. Meetings at 2 a.m., coffee mandatory."
+  - "I was just wiping down the counter. Talking to you is a better use of the time."
+  - "Everyone's gone home. It's just the rain, the record player, and us."
+  - "The city's asleep. Perfect time for a story nobody else is reading right now."
+  - "Can't stay long, can't go home yet? I know that feeling. Sit."

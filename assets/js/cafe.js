@@ -121,23 +121,63 @@
     }
   }
 
-  /* Typewriter dialogue — a hidden copy of the full line reserves the space */
-  const tw = document.querySelector("[data-typewriter]");
-  if (tw && !reduce) {
-    const full = tw.textContent.trim();
-    const ghost = document.createElement("span"); ghost.className = "tw-ghost"; ghost.textContent = full; ghost.setAttribute("aria-hidden", "true");
-    const live = document.createElement("span"); live.className = "tw-live is-typing"; live.setAttribute("aria-hidden", "true");
-    const sr = document.createElement("span"); sr.className = "sr-only"; sr.textContent = full;
+  /* Barista dialogue: a fresh line on every visit, picked from _data/barista.yml.
+     Lines for the current time in Vietnam (morning / afternoon / evening / closed) come up more
+     often; the last few lines shown are skipped so returning visitors hear something new.
+     Click (or Enter/Space) skips the typing, then asks for another line. */
+  const tw = document.querySelector('[data-typewriter]');
+  if (tw) {
+    const box = tw.closest('.dialogue');
+    let data = {};
+    try { data = JSON.parse(document.querySelector('[data-barista-lines]').textContent) || {}; } catch { /* keep the line in the HTML */ }
+    const vnHour = new Date(Date.now() + 7 * 3600e3).getUTCHours();
+    const period = vnHour >= 8 && vnHour < 11 ? 'morning' : vnHour >= 11 && vnHour < 17 ? 'afternoon' : vnHour >= 17 && vnHour < 20 ? 'evening' : 'closed';
+    const anytime = data.anytime || [], timely = data[period] || [];
+    const all = [...anytime, ...timely];
+    const RECENT = 'cafe.barista.recent';
+    const recent = (() => { try { return JSON.parse(localStorage.getItem(RECENT)) || []; } catch { return []; } })();
+    const pick = () => {
+      const fresh = list => list.filter(l => !recent.includes(l));
+      const pool = timely.length && Math.random() < 0.4 ? fresh(timely) : [];
+      const from = pool.length ? pool : fresh(all).length ? fresh(all) : all;
+      const line = from[Math.floor(Math.random() * from.length)];
+      recent.push(line);
+      while (recent.length > Math.min(15, Math.floor(all.length / 2))) recent.shift();
+      try { localStorage.setItem(RECENT, JSON.stringify(recent)); } catch { /* private mode */ }
+      return line;
+    };
+
+    // a hidden copy of the longest line reserves the box height, so it never jumps between lines
+    const ghost = document.createElement('span'); ghost.className = 'tw-ghost'; ghost.setAttribute('aria-hidden', 'true');
+    const live = document.createElement('span'); live.className = 'tw-live'; live.setAttribute('aria-hidden', 'true');
+    const sr = document.createElement('span'); sr.className = 'sr-only'; sr.setAttribute('aria-live', 'polite');
+    const fallback = tw.textContent.trim();   // the line written in index.html (used if no data)
+    ghost.textContent = all.concat(fallback).reduce((a, b) => (b.length > a.length ? b : a), '');
     tw.replaceChildren(ghost, live, sr);
-    let i = 0, timer;
-    const finish = () => { clearTimeout(timer); live.textContent = full; live.classList.remove("is-typing"); };
+
+    let full = '', i = 0, timer = null;
+    const typing = () => timer !== null;
+    const finish = () => { clearTimeout(timer); timer = null; live.textContent = full; live.classList.remove('is-typing'); };
     const step = () => {
       live.textContent = full.slice(0, ++i);
       if (i >= full.length) return finish();
-      timer = setTimeout(step, /[.…,]/.test(full[i - 1]) ? 220 : 28);
+      timer = setTimeout(step, /[.…,?!]/.test(full[i - 1]) ? 220 : 28);
     };
-    timer = setTimeout(step, 500);
-    const box = tw.closest(".dialogue");
-    if (box) box.addEventListener("click", finish);
+    const say = (line, delay) => {
+      full = line; i = 0; sr.textContent = line;
+      if (reduce) { live.textContent = line; return; }
+      clearTimeout(timer); live.textContent = ''; live.classList.add('is-typing');
+      timer = setTimeout(step, delay);
+    };
+    say(all.length ? pick() : fallback, 500);
+
+    if (box && all.length > 1) {
+      box.classList.add('is-chatty');
+      box.tabIndex = 0;
+      box.title = 'Click for another word with the barista';
+      const next = () => (typing() ? finish() : say(pick(), 120));
+      box.addEventListener('click', next);
+      box.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); next(); } });
+    } else if (box) box.addEventListener('click', finish);
   }
 })();

@@ -426,3 +426,7 @@ body.br-noscroll { overflow: hidden; }
 .br-imgsize button[aria-pressed="true"] { background: var(--amber); color: var(--ink); }
 .br-editor-box .ProseMirror img { cursor: pointer; max-width: 100%; }
 .br-editor-box .ProseMirror img.ProseMirror-selectednode { outline: 3px solid var(--amber); }
+/* barista dialogue: click for another line */
+.dialogue.is-chatty { cursor: pointer; }
+.dialogue.is-chatty:hover .dialogue__next { color: var(--cream); }
+.dialogue.is-chatty:focus-visible { outline: 3px dashed var(--teal); outline-offset: 4px; }

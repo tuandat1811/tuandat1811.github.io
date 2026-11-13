@@ -15,6 +15,7 @@ body_class: home
         <span class="dialogue__name" id="welcome">Dat · Barista</span>
         <p data-typewriter>Ah, welcome in. Rain's been falling all night again… Grab a stool by the window. I'll brew you something — and maybe a story to go with it.</p>
         <span class="dialogue__next" aria-hidden="true">▼</span>
+        <script type="application/json" data-barista-lines>{{ site.data.barista | jsonify }}</script>
       </div>
     </div>
     <div class="counter-top" aria-hidden="true">

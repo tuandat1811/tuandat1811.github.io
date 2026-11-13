@@ -26,3 +26,8 @@ exclude:
   - README.md
   - Gemfile
   - Gemfile.lock
+
+# Back room (hidden admin page at /backroom/)
+admin:
+  repo: tuandat1811/tuandat1811.github.io
+  branch: main

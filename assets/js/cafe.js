@@ -50,6 +50,17 @@
   };
   update(); setInterval(update, 15000);
 
+  /* Staff door: tap the sign 5 times within 2 seconds */
+  if (sign && sign.dataset.door) {
+    let taps = [];
+    sign.addEventListener('click', () => {
+      const now = Date.now();
+      taps = taps.filter(t => now - t < 2000);
+      taps.push(now);
+      if (taps.length >= 5) location.href = sign.dataset.door;
+    });
+  }
+
   /* Typewriter dialogue — a hidden copy of the full line reserves the space */
   const tw = document.querySelector("[data-typewriter]");
   if (tw && !reduce) {

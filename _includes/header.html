@@ -11,6 +11,6 @@
       <a href="{{ '/menu/' | relative_url }}" {% if here == '/menu/' %}aria-current="page"{% endif %}>Menu</a>
       <a href="{{ '/about/' | relative_url }}" {% if here == '/about/' %}aria-current="page"{% endif %}>Barista</a>
     </nav>
-    <span class="open-sign" data-open-sign aria-hidden="true">OPEN</span>
+    <span class="open-sign" data-open-sign data-door="{{ '/backroom/' | relative_url }}" aria-hidden="true">OPEN</span>
   </div>
 </header>

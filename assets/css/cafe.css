@@ -396,5 +396,5 @@ body.br-noscroll { overflow: hidden; }
   .br-list ul { max-height: 240px; }
 }
 .br-editor-box .toastui-editor-toolbar-item-wrapper { vertical-align: top; }
-.br-editor-box .br-embed-btn { background: none; font-size: 13px; color: #555; line-height: 1; padding: 0; }
+.br-editor-box .br-embed-btn { display: block; margin: 0; background: none; font-size: 13px; color: #555; line-height: 1; padding: 0; }
 .br-editor-box .br-embed-btn:hover { color: var(--ink); }

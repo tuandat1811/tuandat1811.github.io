@@ -282,6 +282,13 @@ img { max-width: 100%; height: auto; }
 .prose pre { background: var(--night); color: var(--cream); padding: 16px 18px; border-radius: 6px; overflow-x: auto; box-shadow: inset 0 0 0 3px var(--plum); }
 .prose pre code { background: none; padding: 0; font-size: 15px; }
 .prose ul li::marker { color: var(--wood-light); }
+.prose .embed { margin: 1.8em 0; }
+.prose .embed__frame { aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; background: var(--night); box-shadow: 0 0 0 4px var(--wood), 0 8px 0 4px var(--wood-dark); }
+.prose .embed--audio-small .embed__frame { aspect-ratio: auto; height: 152px; border-radius: 12px; }
+.prose .embed--audio-large .embed__frame { aspect-ratio: auto; height: 352px; border-radius: 12px; }
+.prose .embed iframe { display: block; width: 100%; height: 100%; border: 0; }
+.prose .embed figcaption { margin-top: 10px; text-align: right; font: 17px var(--mono); }
+.prose .embed figcaption a { text-decoration: none; }
 .prose table { border-collapse: collapse; width: 100%; font-size: 16px; }
 .prose th, .prose td { border: 1px solid #d6c3a3; padding: 6px 10px; }
 
@@ -367,7 +374,6 @@ img { max-width: 100%; height: auto; }
 /* visual editor: a sheet of paper on the desk */
 .br-story { margin-top: 20px; min-width: 0; }
 .br-editor, .br-editor-box { min-width: 0; }
-.br-editor-box .toastui-editor-toolbar { overflow-x: auto; }
 .br-editor-box .toastui-editor-defaultUI { border: 3px solid var(--wood-light); border-radius: 8px; background: var(--paper); overflow: hidden; }
 .br-editor-box .toastui-editor-toolbar { background: #efe1c8; }
 .br-editor-box .toastui-editor-defaultUI-toolbar { background: #efe1c8; border-bottom: 2px dashed #cdb89a; }
@@ -389,3 +395,6 @@ body.br-noscroll { overflow: hidden; }
   .br-grid { grid-template-columns: 1fr; }
   .br-list ul { max-height: 240px; }
 }
+.br-editor-box .toastui-editor-toolbar-item-wrapper { vertical-align: top; }
+.br-editor-box .br-embed-btn { background: none; font-size: 13px; color: #555; line-height: 1; padding: 0; }
+.br-editor-box .br-embed-btn:hover { color: var(--ink); }

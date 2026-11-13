@@ -5,7 +5,7 @@ permalink: /backroom/
 sitemap: false
 noindex: true
 body_class: backroom-page
-csp: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src https://api.github.com; object-src 'none'; base-uri 'none'; form-action 'none'"
+csp: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src https://api.github.com; frame-src https://www.youtube-nocookie.com https://player.vimeo.com https://open.spotify.com; object-src 'none'; base-uri 'none'; form-action 'none'"
 ---
 <section class="wrap backroom" data-backroom data-repo="{{ site.admin.repo }}" data-branch="{{ site.admin.branch | default: 'main' }}" data-site="{{ site.url }}{{ site.baseurl }}">
   <header class="section-head backroom__head">

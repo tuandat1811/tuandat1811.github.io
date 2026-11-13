@@ -33,7 +33,15 @@
   let filling = false;         // true while we load text into the editor (not a user edit)
 
   /* ---------- the visual editor (Word-like; stores Markdown underneath) ---------- */
-  const editor = new window.toastui.Editor({
+  const embedBtn = document.createElement('button');
+  embedBtn.type = 'button';
+  embedBtn.className = 'toastui-editor-toolbar-icons br-embed-btn';
+  embedBtn.textContent = '▶';
+  embedBtn.setAttribute('aria-label', 'Embed a YouTube, Vimeo or Spotify link');
+  /* The editor measures its toolbar when created, so it is created only once the desk is visible
+     (created while hidden, every button would collapse into the "…" menu). */
+  let editor = null;
+  const createEditor = () => new window.toastui.Editor({
     el: $('[data-editor]'),
     height: '560px',
     initialEditType: 'wysiwyg',
@@ -42,7 +50,9 @@
     usageStatistics: false,
     autofocus: false,
     placeholder: 'Write your story here… Use the toolbar for headings, bold, lists, quotes and images.',
-    toolbarItems: [['heading', 'bold', 'italic', 'strike'], ['hr', 'quote'], ['ul', 'ol'], ['table', 'image', 'link'], ['code', 'codeblock']],
+    toolbarItems: [['heading', 'bold', 'italic'], ['ul', 'ol', 'quote'],
+      ['image', { name: 'embed', el: embedBtn, tooltip: 'Embed video / music' }, 'link'],
+      ['strike', 'hr', 'table', 'code', 'codeblock']],
     hooks: {
       addImageBlobHook(blob, callback) {
         const staged = stageImage(blob);
@@ -50,7 +60,39 @@
       },
     },
   });
-  editor.on('change', () => { if (!filling) dirty = true; });
+  function ensureEditor() {
+    if (editor) return;
+    editor = createEditor();
+    editor.on('change', () => { if (!filling) dirty = true; });
+  }
+
+  /* Embeds: a supported link alone on its own line becomes a player on the site (see embeds.js). */
+  function insertEmbed(url) {
+    const view = editor.isWysiwygMode() && editor.wwEditor && editor.wwEditor.view;
+    if (view) {
+      const { state } = view;
+      const para = state.schema.nodes.paragraph.create(null, state.schema.text(url));
+      const $from = state.selection.$from;
+      const block = $from.node(1);
+      const tr = block && block.type.name === 'paragraph' && !block.textContent.trim()
+        ? state.tr.replaceWith($from.before(1), $from.after(1), para)    // empty line: use it
+        : state.tr.insert($from.depth ? $from.after(1) : state.doc.content.size, para); // else: new line below
+      view.dispatch(tr.scrollIntoView());
+      view.focus();
+    } else {
+      editor.replaceSelection(`\n\n${url}\n\n`);
+    }
+  }
+  embedBtn.addEventListener('click', () => {
+    const url = prompt('Paste a YouTube, Vimeo or Spotify link.\nIt will show as a player on the site (use Preview to check).');
+    if (!url || !url.trim()) return;
+    if (!window.cafeEmbeds || !window.cafeEmbeds.toEmbed(url)) {
+      say(ui.status, 'That link can’t be embedded — supported: YouTube, Vimeo, Spotify.', 'error');
+      return;
+    }
+    insertEmbed(url.trim());
+    say(ui.status, 'Embed added. It shows as a link here and as a player in Preview and on the site.', 'ok');
+  });
   const toKeys = md => { for (const [key, url] of blobs) md = md.split(url).join(key); return md; };   // blob: URLs -> real paths
   const toBlobs = md => { for (const [key, url] of blobs) md = md.split(key).join(url); return md; };
   /* The visual editor separates paragraphs with a single newline, which Jekyll (kramdown) would
@@ -61,13 +103,23 @@
   const isTable = l => /^\s*\|/.test(l);
   const isQuote = l => /^\s*>/.test(l);
   const isPlain = l => l.trim() && !isFence(l) && !isList(l) && !isIndented(l) && !isTable(l) && !isQuote(l);
+  /* A line that is only an embeddable link is written as <url>, so Jekyll keeps it verbatim
+     (no smart dashes/ellipses inside the URL) and the site turns it into a player. */
+  function protectEmbed(line) {
+    const unescape = s => s.replace(/\\([\\`*_{}[\]()#+.!~|-])/g, '$1');
+    let url = unescape(line.trim());
+    const asLink = url.match(/^\[(https?:\/\/[^\]\s]+)\]\((https?:\/\/[^)\s]+)\)$/);   // [url](url) from the editor
+    if (asLink && asLink[1] === asLink[2]) url = asLink[2];
+    if (!/^https?:\/\/\S+$/.test(url) || !window.cafeEmbeds || !window.cafeEmbeds.toEmbed(url)) return line;
+    return `<${url}>`;
+  }
   function normalizeMd(md) {
     const lines = md.replace(/\r\n/g, '\n').split('\n');
     const out = [];
     let fence = false;
     for (let i = 0; i < lines.length; i++) {
       const a = lines[i], b = lines[i + 1];
-      out.push(a);
+      out.push(fence ? a : protectEmbed(a));
       if (isFence(a)) fence = !fence;
       if (fence || b === undefined || !a.trim() || !b.trim()) continue;
       if (isTable(a) && isTable(b)) continue;
@@ -153,7 +205,10 @@
   }
 
   /* ---------- views ---------- */
-  function show(name) { for (const [k, el] of Object.entries(views)) el.hidden = k !== name; }
+  function show(name) {
+    for (const [k, el] of Object.entries(views)) el.hidden = k !== name;
+    if (name === 'desk') ensureEditor();
+  }
 
   async function unlock(t, remember) {
     token = t;
@@ -269,6 +324,7 @@
     const prose = el('div', 'prose'); prose.innerHTML = html;
     prose.querySelectorAll('img').forEach(img => { const b = blobs.get(img.getAttribute('src')); if (b) img.src = b; });
     ui.preview.append(prose);
+    if (window.cafeEmbeds) window.cafeEmbeds.enhance(prose);
   }
   function openPreview() {
     renderPreview();

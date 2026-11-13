@@ -21,7 +21,7 @@ Em có một thói quen. Mỗi lần sắp nói câu mình không chắc, em th�
 
 Và đó cũng là cái đáng sợ. Học thuộc rồi, thì lúc người ta không còn ở đó, mình vẫn nghe thấy.
 
-![128333b5-fefd-47e4-8f11-040615ad4d6f](/assets/img/posts/2026-11-13-128333b5-fefd-47e4-8f11-040615ad4d6f-0ayk.jpg)
+![128333b5-fefd-47e4-8f11-040615ad4d6f](/assets/img/posts/2026-11-13-128333b5-fefd-47e4-8f11-040615ad4d6f-0ayk.jpg#w=50)
 
 Sau khi chia tay rồi, tôi biết tin em đi du học.
 
@@ -35,11 +35,11 @@ Tôi không biết người đó là ai. Có thể là bạn học. Có thể l�
 
 Và có lẽ tôi cũng không có tư cách để biết.
 
-![8435dad3-fba0-415a-8765-9585208d5046](/assets/img/posts/2026-11-13-8435dad3-fba0-415a-8765-9585208d5046-9mjn.jpg)
+![8435dad3-fba0-415a-8765-9585208d5046](/assets/img/posts/2026-11-13-8435dad3-fba0-415a-8765-9585208d5046-9mjn.jpg#w=50)
 
 Một ngày nào đó nếu như em không còn thấy tôi nhìn về phía em nữa.
 
-Mà thật ra, em đâu có thấy tôi nhìn ngay bây giờ. Em ở bên kia nửa vòng Trái Đất. 
+Mà thật ra, em đâu có thấy tôi nhìn ngay bây giờ. Em ở bên kia nửa vòng Trái Đất.
 
 Có thể em không biết, nhưng có thể em vẫn cảm được, trong những lúc rất lẻ. Như một ngày em tự nhiên nhớ một con đường cũ, một bài hát cũ, rồi tự hỏi sao lại nhớ. Có lẽ không vì gì cả. Có lẽ vì ở một nơi nào đó, có người đang cầm một cái hộp khuyên tai, nghĩ về em.
 
@@ -53,10 +53,10 @@ Cho nên tôi nói câu này, cho đúng ngày đó.
 
 Mong em hãy tin rằng tôi đã yêu em nhiều hơn những gì em biết.
 
-Em biết bao nhiêu thì tôi đã cho em biết bấy nhiêu. Hai năm, tôi nói ‘anh yêu em’ rất nhiều lần. Nhưng ba chữ ‘anh xin lỗi’ thì tôi tiếc, tiếc đến mức để nó nằm lại trong cổ họng đúng cái đêm cần nhất. 
+Em biết bao nhiêu thì tôi đã cho em biết bấy nhiêu. Hai năm, tôi nói ‘anh yêu em’ rất nhiều lần. Nhưng ba chữ ‘anh xin lỗi’ thì tôi tiếc, tiếc đến mức để nó nằm lại trong cổ họng đúng cái đêm cần nhất.
 
 Nên cái ‘nhiều hơn em biết’ kia, có lẽ nên đọc thành hai nửa. Tôi yêu em, thật, nhiều hơn những gì một người cãi nhau xong im lặng suốt bao lâu có thể chứng minh. Và nửa thứ hai, cái phần tình yêu đó em không biết, vì tôi đã giữ nó lại sau lớp kiêu hãnh.
 
-Nếu một ngày em không còn thấy tôi nhìn về phía em nữa. Chắc em sẽ cảm ơn tôi vì đã buông cho em? 
+Nếu một ngày em không còn thấy tôi nhìn về phía em nữa. Chắc em sẽ cảm ơn tôi vì đã buông cho em?
 
 Tôi không biết ngày đó là bao giờ. Tôi cũng không vội. Tôi từng nghĩ phải quên cho nhanh mới là mạnh. Giờ thì nghĩ khác. Cái gì mất hai năm mới có, thì cũng có quyền mất một khoảng thời gian dài mới tàn.

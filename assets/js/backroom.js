@@ -210,10 +210,29 @@
     if (name === 'desk') ensureEditor();
   }
 
+  /* A token that can't write gets 403 "Resource not accessible by personal access token" (or 404). */
+  const NO_WRITE_HELP = `This token can’t write to ${REPO}. On GitHub, edit the token: ` +
+    `Repository access → Only select repositories → ${REPO}; ` +
+    `Permissions → Repository permissions → Contents: Read and write. Save, then unlock again.`;
+  const isNoWrite = err => err && (err.status === 403 || err.status === 404);
+
+  /* `repo.permissions` describes the *account*, not the token, so probe write access for real:
+     an update with an impossible sha is rejected for permission first (403/404), otherwise for the
+     sha mismatch (409/422) — nothing is ever written. */
+  async function canWrite() {
+    try {
+      await gh(`/contents/${POSTS_DIR}/.gitkeep`, { method: 'PUT', body: JSON.stringify({ message: 'access check', content: '', sha: '0'.repeat(40), branch: BRANCH }) });
+      return true;
+    } catch (err) {
+      if (isNoWrite(err)) return false;
+      return true; // 409/422 etc.: allowed to write, only the (fake) sha was refused
+    }
+  }
+
   async function unlock(t, remember) {
     token = t;
-    const repo = await gh('');
-    if (!repo.permissions || !repo.permissions.push) { const e = new Error(`This token can't write to ${REPO}.`); e.status = 403; throw e; }
+    await gh('');                       // 401 here = bad or expired token
+    if (!(await canWrite())) { const e = new Error(NO_WRITE_HELP); e.status = 403; throw e; }
     store.set(t, remember);
     try { const me = await fetch('https://api.github.com/user', { headers: { Authorization: `Bearer ${t}` } }).then(r => r.ok ? r.json() : null); if (me) ui.whoami.textContent = `Signed in as ${me.login}. Brewing to ${REPO} (${BRANCH}).`; } catch { /* optional */ }
     show('desk');
@@ -229,7 +248,11 @@
     if (!t) return;
     say(msg, 'Checking the key…');
     try { await unlock(t, fd.get('remember') === 'on'); e.target.reset(); say(msg, ''); }
-    catch (err) { token = null; say(msg, err.status === 401 ? 'That key doesn’t fit — the token is invalid or expired.' : `Couldn’t unlock: ${err.message}`, 'error'); }
+    catch (err) {
+      token = null;
+      say(msg, err.status === 401 ? 'That key doesn’t fit — the token is invalid or expired.'
+        : err.message === NO_WRITE_HELP ? NO_WRITE_HELP : `Couldn’t unlock: ${err.message}`, 'error');
+    }
   });
 
   $('[data-lock]').addEventListener('click', () => {
@@ -392,7 +415,8 @@
     } catch (err) {
       say(ui.status, err.status === 409 && err.message.includes('already')
         ? err.message
-        : err.status === 409 ? 'Someone else changed this story meanwhile. Reopen it and try again.' : `Couldn’t deploy: ${err.message}`, 'error');
+        : err.status === 409 ? 'Someone else changed this story meanwhile. Reopen it and try again.'
+        : isNoWrite(err) ? `Couldn’t deploy. ${NO_WRITE_HELP}` : `Couldn’t deploy: ${err.message}`, 'error');
     } finally { busy(false); }
   });
 
@@ -406,7 +430,7 @@
       dirty = false; current = null; newPost();
       say(ui.status, `Removed “${title}”. The site updates in ~1–2 minutes.`, 'ok');
       await loadList();
-    } catch (err) { say(ui.status, `Couldn’t delete: ${err.message}`, 'error'); }
+    } catch (err) { say(ui.status, isNoWrite(err) ? `Couldn’t delete. ${NO_WRITE_HELP}` : `Couldn’t delete: ${err.message}`, 'error'); }
     finally { busy(false); }
   });
 

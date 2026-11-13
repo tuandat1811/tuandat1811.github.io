@@ -34,18 +34,18 @@
     resize(); requestAnimationFrame(tick);
   }
 
-  /* Wall clock + OPEN sign (the café opens at dusk) */
+  /* Wall clock + OPEN sign (opening hours: 08:00–20:00, Vietnam time GMT+7) */
   const clock = document.querySelector('[data-clock]');
   const sign = document.querySelector('[data-open-sign]');
   const update = () => {
     const now = new Date();
     if (clock) clock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     if (sign) {
-      const hr = now.getHours();
-      const open = hr >= 17 || hr < 4;
+      const hr = new Date(now.getTime() + 7 * 3600e3).getUTCHours();   // hour in GMT+7, whatever the visitor's zone
+      const open = hr >= 8 && hr < 20;
       sign.textContent = open ? 'OPEN' : 'CLOSED';
       sign.classList.toggle('is-closed', !open);
-      sign.title = open ? 'Come on in.' : 'Opens at dusk — but the door is never locked for readers.';
+      sign.title = open ? 'Open 8:00–20:00 (GMT+7). Come on in.' : 'Closed — opens 8:00 (GMT+7). The door is never locked for readers, though.';
     }
   };
   update(); setInterval(update, 15000);

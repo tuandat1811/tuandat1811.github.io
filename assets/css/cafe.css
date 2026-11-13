@@ -15,6 +15,8 @@
   --neon: #ff7aa2;
   --neon-glow: rgba(255, 122, 162, .55);
   --teal: #6fd3c8;
+  --closed-red: #ff4d4d;
+  --closed-red-glow: rgba(255, 77, 77, .45);
   --muted: #b7a8c9;
 
   --display: "Baloo 2", "Nunito", system-ui, sans-serif;
@@ -86,7 +88,7 @@ img { max-width: 100%; height: auto; }
   border: 2px solid var(--teal); border-radius: 4px; padding: 0 8px;
   text-shadow: 0 0 8px var(--teal); box-shadow: 0 0 12px rgba(111, 211, 200, .35), inset 0 0 8px rgba(111, 211, 200, .25);
 }
-.open-sign.is-closed { color: var(--neon); border-color: var(--neon); text-shadow: 0 0 8px var(--neon); box-shadow: 0 0 12px var(--neon-glow); }
+.open-sign.is-closed { color: var(--closed-red); border-color: var(--closed-red); text-shadow: 0 0 8px var(--closed-red); box-shadow: 0 0 12px var(--closed-red-glow), inset 0 0 8px var(--closed-red-glow); }
 
 @keyframes flicker {
   0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; }

@@ -41,9 +41,10 @@ csp: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' ht
   <div class="br-desk" data-view="desk" hidden>
     <aside class="br-card br-list">
       <div class="br-list__head">
-        <h2>Orders</h2>
+        <h2>Your stories</h2>
         <button class="btn btn--small" type="button" data-new>+ New story</button>
       </div>
+      <p class="br-muted br-hint">Tap a story to open it and edit. Press “Update” to publish the changes.</p>
       <ul data-post-list><li class="br-muted">Loading…</li></ul>
       <p class="br-leave">
         <a class="br-link" href="{{ '/' | relative_url }}">← Back to the café</a>
@@ -54,6 +55,7 @@ csp: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' ht
     <div class="br-card br-editor">
       <div class="br-editor__head">
         <h2 data-editor-title>New story</h2>
+        <a class="br-link br-view" data-view-live href="#" target="_blank" rel="noopener" hidden>View on site ↗</a>
         <code class="br-path" data-path></code>
       </div>
 

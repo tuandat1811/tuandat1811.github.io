@@ -21,7 +21,7 @@
   const ui = {
     list: $('[data-post-list]'), status: $('[data-status]'), path: $('[data-path]'), heading: $('[data-editor-title]'),
     deploy: $('[data-deploy]'), del: $('[data-delete]'), preview: $('[data-preview]'), overlay: $('[data-overlay]'), whoami: $('[data-whoami]'),
-    closePreview: $('[data-preview-close]'),
+    closePreview: $('[data-preview-close]'), viewLive: $('[data-view-live]'),
   };
   document.body.append(ui.overlay); // lift the preview above the site header
 
@@ -283,12 +283,42 @@
       const btn = document.createElement('button');
       btn.type = 'button'; btn.dataset.path = f.path;
       const name = f.name.replace(/\.(md|markdown)$/, '');
-      btn.append(document.createTextNode(name.slice(11).replace(/-/g, ' ') || name));
-      const small = document.createElement('small'); small.textContent = name.slice(0, 10); btn.append(small);
+      const label = document.createElement('span'); label.className = 'br-item__title';
+      label.textContent = name.slice(11).replace(/-/g, ' ') || name;   // replaced by the real title below
+      const small = document.createElement('small');
+      const [y, m, d] = name.slice(0, 10).split('-'); small.textContent = d && m && y ? `${d}.${m}.${y}` : name.slice(0, 10);
+      const edit = document.createElement('span'); edit.className = 'br-item__edit'; edit.textContent = '✎ Edit'; edit.setAttribute('aria-hidden', 'true');
+      btn.append(label, small, edit);
+      btn.setAttribute('aria-label', `Edit ${label.textContent}`);
       btn.addEventListener('click', () => openPost(f.path));
       item.append(btn); ui.list.append(item);
     }
     markCurrent();
+    loadTitles(files);
+  }
+  /* Show each story's real title (with Vietnamese accents) instead of its file name. */
+  async function loadTitles(files) {
+    const queue = files.slice(0, 60);
+    const worker = async () => {
+      while (queue.length) {
+        const f = queue.shift();
+        try {
+          const { meta } = parseFile(b64ToText((await getFile(f.path)).content));
+          const btn = ui.list.querySelector(`button[data-path="${CSS.escape(f.path)}"]`);
+          if (btn && meta.title) { btn.querySelector('.br-item__title').textContent = meta.title; btn.setAttribute('aria-label', `Edit ${meta.title}`); }
+        } catch { /* keep the file name */ }
+      }
+    };
+    await Promise.all([worker(), worker(), worker()]);
+  }
+  /* Header, buttons and "View on site" follow whether we're writing a new story or editing one. */
+  function setMode(title) {
+    const editing = !!current;
+    ui.heading.textContent = editing ? `Editing: ${title || 'Untitled'}` : 'New story';
+    ui.del.hidden = !editing;
+    ui.deploy.textContent = editing ? 'Update ☕' : 'Deploy ☕';
+    ui.viewLive.hidden = !editing;
+    if (editing) ui.viewLive.href = postUrl(current.path);
   }
   const li = text => { const el = document.createElement('li'); el.className = 'br-muted'; el.textContent = text; return el; };
   const markCurrent = () => ui.list.querySelectorAll('button[data-path]').forEach(b => b.setAttribute('aria-current', String(!!current && b.dataset.path === current.path)));
@@ -309,7 +339,7 @@
   function newPost() {
     if (dirty && !confirm('Discard unsaved changes?')) return;
     current = null; pending.clear();
-    ui.heading.textContent = 'New story'; ui.del.hidden = true;
+    setMode();
     fill({}, ''); say(ui.status, ''); markCurrent();
   }
   $('[data-new]').addEventListener('click', newPost);
@@ -322,8 +352,9 @@
       const { meta, body } = parseFile(b64ToText(file.content));
       if (!meta.date) meta.date = path.split('/').pop().slice(0, 10);
       current = { path, sha: file.sha }; pending.clear();
-      ui.heading.textContent = 'Edit story'; ui.del.hidden = false;
-      fill(meta, body); say(ui.status, ''); markCurrent();
+      setMode(meta.title);
+      fill(meta, body); say(ui.status, 'Opened — make your changes, then press “Update”.'); markCurrent();
+      $('[name="title"]').scrollIntoView({ behavior: 'smooth', block: 'center' });
     } catch (err) { say(ui.status, `Couldn’t open it: ${err.message}`, 'error'); }
   }
 
@@ -417,7 +448,7 @@
       say(ui.status, 'Pouring the story…');
       const res = await putFile(path, textToB64(buildFile(f)), `${current ? 'Update' : 'Publish'}: ${f.title}`, current && current.sha);
       current = { path, sha: res.content.sha }; dirty = false;
-      ui.heading.textContent = 'Edit story'; ui.del.hidden = false; refreshPath();
+      setMode(f.title); refreshPath();
       say(ui.status, `Served! GitHub builds the site in ~1–2 minutes: ${postUrl(path)}. ${CACHE_NOTE}`, 'ok');
       await loadList();
       watchBuild(started, path);

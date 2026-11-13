@@ -402,3 +402,11 @@ body.br-noscroll { overflow: hidden; }
 .br-editor-box .br-embed-btn:hover { color: var(--ink); }
 .br-leave { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 16px 0 0; }
 .br-leave .br-link { margin-top: 0; }
+.br-hint { margin: -4px 0 12px; font-size: 14px; }
+.br-list li button { display: grid; grid-template-columns: 1fr auto; column-gap: 8px; align-items: center; }
+.br-list li button .br-item__title { grid-column: 1; }
+.br-list li button small { grid-column: 1; }
+.br-list li button .br-item__edit { grid-column: 2; grid-row: 1 / span 2; font: 600 13px var(--display); color: #b0532a; opacity: .75; }
+.br-list li button:hover .br-item__edit, .br-list li button[aria-current="true"] .br-item__edit { opacity: 1; }
+.br-list li button:hover { background: #fff6e6; }
+.br-view { margin: 0; font-size: 14px; }

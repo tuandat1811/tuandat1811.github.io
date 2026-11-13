@@ -234,7 +234,10 @@ img { max-width: 100%; height: auto; }
   box-shadow: inset 0 0 40px rgba(0,0,0,.5), var(--shadow-px);
   padding: clamp(20px, 4vw, 40px);
   display: grid; gap: 32px;
+  grid-template-rows: 1fr auto;
+  min-height: clamp(300px, 52vh, 480px);   /* a real board even with only a few stories */
 }
+.chalk-footnote { margin: 0; text-align: center; font: 20px var(--mono); color: #9fb9ab; letter-spacing: .06em; opacity: .85; }
 .chalk-section h2 { font: 700 28px var(--display); margin: 0 0 12px; color: #fdf6e3; text-shadow: 0 0 1px rgba(255,255,255,.6); }
 .chalk-section h2 small { font: 20px var(--mono); color: #b8d4c5; letter-spacing: .04em; }
 .chalk-list { list-style: none; margin: 0; padding: 0; }

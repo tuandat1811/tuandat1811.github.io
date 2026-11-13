@@ -1,0 +1,29 @@
+---
+layout: default
+---
+{% assign words = content | number_of_words %}
+{% assign minutes = words | divided_by: 200 | floor | plus: 1 %}
+<article class="wrap paper">
+  <header class="paper__head">
+    {% if page.drink and page.drink != "" %}<p class="kicker"><span>☕ {{ page.drink }}</span></p>{% endif %}
+    <h1 class="paper__title">{{ page.title }}</h1>
+    <p class="paper__meta">
+      <time datetime="{{ page.date | date_to_xmlschema }}">Brewed {{ page.date | date: '%d.%m.%Y' }}</time>
+      · {{ minutes }} min sip
+    </p>
+  </header>
+  {% if page.cover %}<img class="paper__cover" src="{{ page.cover | relative_url }}" alt="">{% endif %}
+  {% if page.quote %}
+  <aside class="dialogue dialogue--inline" aria-label="Barista's note">
+    <span class="dialogue__name">Barista</span>
+    <p>{{ page.quote }}</p>
+  </aside>
+  {% endif %}
+  <div class="prose">
+    {{ content }}
+  </div>
+  <nav class="paper__nav" aria-label="More stories">
+    {% if page.previous %}<a class="btn" href="{{ page.previous.url | relative_url }}">← {{ page.previous.title }}</a>{% else %}<span></span>{% endif %}
+    {% if page.next %}<a class="btn" href="{{ page.next.url | relative_url }}">{{ page.next.title }} →</a>{% endif %}
+  </nav>
+</article>

@@ -1,0 +1,28 @@
+# ☕ Aerial's Corner — a late-night café blog
+title: "Aerial's Corner"
+tagline: A late-night café for stories
+description: "Pull up a stool. It's raining outside, and Dat is brewing stories."
+author:
+  name: Tuan Dat
+  email: shinya.ft@gmail.com
+  facebook: https://www.facebook.com/shinya.Ft/
+url: "https://tuandat1811.github.io"
+baseurl: ""
+lang: vi
+
+timezone: Asia/Ho_Chi_Minh
+permalink: /p/:title/
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock

@@ -1,0 +1,26 @@
+---
+layout: default
+title: Menu
+permalink: /menu/
+---
+<section class="wrap orders">
+  <header class="section-head">
+    <p class="kicker">Chalkboard</p>
+    <h1>The menu</h1>
+    <p>Every story ever served here, newest first.</p>
+  </header>
+
+  <div class="chalkboard">
+    <section class="chalk-section">
+      {% if site.posts.size > 0 %}
+      <ul class="chalk-list">
+        {% for post in site.posts %}
+        <li><a href="{{ post.url | relative_url }}"><span>{{ post.title }}</span><i aria-hidden="true"></i><time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: '%d.%m.%y' }}</time></a></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="chalk-empty">Sold out — coming soon.</p>
+      {% endif %}
+    </section>
+  </div>
+</section>

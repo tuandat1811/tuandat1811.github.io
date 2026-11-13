@@ -1,0 +1,16 @@
+<header class="awning">
+  <div class="wrap awning__inner">
+    <a class="sign" href="{{ '/' | relative_url }}" aria-label="{{ site.title }} — home">
+      <span class="sign__cup" aria-hidden="true">☕</span>
+      <span class="sign__name">{{ site.title }}</span>
+      <span class="sign__sub">{{ site.tagline }}</span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      {% assign here = page.url %}
+      <a href="{{ '/' | relative_url }}" {% if here == '/' %}aria-current="page"{% endif %}>Counter</a>
+      <a href="{{ '/menu/' | relative_url }}" {% if here == '/menu/' %}aria-current="page"{% endif %}>Menu</a>
+      <a href="{{ '/about/' | relative_url }}" {% if here == '/about/' %}aria-current="page"{% endif %}>Barista</a>
+    </nav>
+    <span class="open-sign" data-open-sign aria-hidden="true">OPEN</span>
+  </div>
+</header>

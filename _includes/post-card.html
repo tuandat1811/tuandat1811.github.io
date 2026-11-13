@@ -1,0 +1,14 @@
+<li class="ticket">
+  <a class="ticket__link" href="{{ include.post.url | relative_url }}">
+    <div class="ticket__top">
+      <span class="ticket__no">#{{ include.index | prepend: '00' | slice: -3, 3 }}</span>
+      <time datetime="{{ include.post.date | date_to_xmlschema }}">{{ include.post.date | date: '%d.%m.%Y' }}</time>
+    </div>
+    {% if include.post.cover %}<img class="ticket__cover" src="{{ include.post.cover | relative_url }}" alt="" loading="lazy">{% endif %}
+    <h3 class="ticket__title">{{ include.post.title }}</h3>
+    {% if include.post.excerpt %}<p class="ticket__excerpt">{{ include.post.excerpt | strip_html | truncate: 140 }}</p>{% endif %}
+    <div class="ticket__bottom">
+      {% if include.post.drink and include.post.drink != "" %}<span class="ticket__drink">☕ {{ include.post.drink }}</span>{% endif %}
+    </div>
+  </a>
+</li>

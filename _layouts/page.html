@@ -1,0 +1,12 @@
+---
+layout: default
+---
+<article class="wrap paper">
+  <header class="paper__head">
+    {% if page.kicker %}<p class="kicker">{{ page.kicker }}</p>{% endif %}
+    <h1 class="paper__title">{{ page.title }}</h1>
+  </header>
+  <div class="prose">
+    {{ content }}
+  </div>
+</article>

@@ -5,7 +5,7 @@ kicker: The barista
 permalink: /about/
 ---
 
-<img class="about__portrait" src="{{ '/assets/img/avatar.jpg' | relative_url }}" alt="Dat" width="160" height="160">
+<img class="about__portrait" src="{{ '/assets/img/avatar.jpg' | relative_url }}?v=2" alt="Dat" width="160" height="160">
 
 Hey there — I'm **Dat**, the one behind the counter. Everyone carries their own story, so this little café is where I set mine down, one cup at a time.
 

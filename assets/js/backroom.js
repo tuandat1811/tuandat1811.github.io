@@ -453,7 +453,7 @@
     const head = el('header', 'paper__head');
     if (form.drink.value.trim()) { const k = el('p', 'kicker'); k.append(el('span', null, `☕ ${form.drink.value.trim()}`)); head.append(k); }
     head.append(el('h1', 'paper__title', form.title.value.trim() || 'Untitled'));
-    const words = body.replace(/[#>*_[]()!`-]/g, ' ').split(/s+/).filter(Boolean).length;
+    const words = body.replace(/!\[[^\]]*\]\([^)]*\)/g, ' ').split(/\s+/).filter(w => /[\p{L}\p{N}]/u.test(w)).length;   // words, skipping images and bare symbols
     const [y, m, d] = (form.date.value || '').split('-');
     head.append(el('p', 'paper__meta', `Brewed ${d && m && y ? `${d}.${m}.${y}` : '—'} · ${Math.floor(words / 200) + 1} min sip`));
     ui.preview.append(head);

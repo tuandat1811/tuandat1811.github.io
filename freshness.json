@@ -3,4 +3,4 @@ layout: null
 permalink: /freshness.json
 sitemap: false
 ---
-{"count": {{ site.posts.size }}, "latest": {{ site.posts.first.url | default: "" | jsonify }}}
+{"built": {{ site.time | date: '%s' }}, "rev": {{ site.github.build_revision | default: "" | jsonify }}, "count": {{ site.posts.size }}, "latest": {{ site.posts.first.url | default: "" | jsonify }}}

@@ -61,18 +61,20 @@
     });
   }
 
-  /* Fresh menu: GitHub Pages lets browsers cache pages for 10 minutes, so a list page can be
-     stale right after a new story is served. Compare with /freshness.json and reload once if needed. */
+  /* Fresh pages: GitHub Pages lets browsers keep pages for 10 minutes, so right after a story is
+     published or edited a visitor could still see the old copy. Every public page carries the time
+     its build ran; /freshness.json (fetched uncached) says when the newest build ran. If this copy is
+     older, replace it once with a fresh one. */
   const fresh = document.querySelector('[data-freshness]');
   if (fresh && window.fetch) {
     const url = `${fresh.dataset.src}?t=${Date.now()}`;   // unique URL: skips browser and CDN caches
     fetch(url, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(async data => {
       if (!data) return;
-      const shown = `${fresh.dataset.count}|${fresh.dataset.latest}`;
-      const live = `${data.count}|${data.latest}`;
-      if (shown === live) return;
+      const shown = +fresh.dataset.built || 0, live = +data.built || 0;
+      if (!live || live <= shown) return;
       const key = 'cafe.refreshed:' + location.pathname;
-      try { if (sessionStorage.getItem(key) === live) return; sessionStorage.setItem(key, live); } catch { /* no storage: still try once */ }
+      // reload at most once per newer build, even if the CDN still hands back an old copy
+      try { if (sessionStorage.getItem(key) === String(live)) return; sessionStorage.setItem(key, String(live)); } catch { return; }
       await fetch(location.href, { cache: 'reload' }).catch(() => {});   // replace the cached copy
       location.reload();
     }).catch(() => {});

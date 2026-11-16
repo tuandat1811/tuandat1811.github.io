@@ -7,6 +7,7 @@
   const BRANCH = root.dataset.branch || 'main';
   const SITE = (root.dataset.site || '').replace(/\/$/, '');
   const API = `https://api.github.com/repos/${REPO}`;
+  const FRESH = root.dataset.fresh || '/freshness.json';   // public build stamp, see freshness.json
   const KEY = 'backroom.token';
   const POSTS_DIR = '_posts';
   const IMG_DIR = 'assets/img/posts';
@@ -30,6 +31,7 @@
   let dirty = false;
   const pending = new Map();   // '/assets/img/posts/x.jpg' -> File (not uploaded yet)
   const blobs = new Map();     // same key -> object URL shown while editing
+  let watching = 0;           // id of the running "is it live yet?" watcher; bump it to stop that watcher
   let filling = false;         // true while we load text into the editor (not a user edit)
 
   /* ---------- the visual editor (Word-like; stores Markdown underneath) ---------- */
@@ -262,8 +264,6 @@
     return res.status === 204 ? null : res.json();
   }
   const getFile = path => gh(`/contents/${encPath(path)}?ref=${encodeURIComponent(BRANCH)}`);
-  const putFile = (path, content64, message, sha) =>
-    gh(`/contents/${encPath(path)}`, { method: 'PUT', body: JSON.stringify({ message, content: content64, branch: BRANCH, ...(sha ? { sha } : {}) }) });
 
   /* ---------- front matter ---------- */
   const q = v => JSON.stringify(String(v)); // JSON strings are valid YAML double-quoted scalars
@@ -300,7 +300,6 @@
   const NO_WRITE_HELP = `This token can’t write to ${REPO}. On GitHub, edit the token: ` +
     `Repository access → Only select repositories → ${REPO}; ` +
     `Permissions → Repository permissions → Contents: Read and write. Save, then unlock again.`;
-  const CACHE_NOTE = 'Your browser may keep showing the old page for up to 10 minutes — press Ctrl+F5 (or open a private window) to see it sooner.';
   const isNoWrite = err => err && (err.status === 403 || err.status === 404);
 
   /* `repo.permissions` describes the *account*, not the token, so probe write access for real:
@@ -416,6 +415,7 @@
   }
 
   function newPost() {
+    watching++;
     if (dirty && !confirm('Discard unsaved changes?')) return;
     current = null; pending.clear();
     setMode();
@@ -424,6 +424,7 @@
   $('[data-new]').addEventListener('click', newPost);
 
   async function openPost(path) {
+    watching++;
     if (dirty && !confirm('Discard unsaved changes?')) return;
     say(ui.status, 'Fetching from the shelf…');
     try {
@@ -503,37 +504,69 @@
   /* ---------- deploy / delete ---------- */
   const busy = on => { ui.deploy.disabled = on; ui.del.disabled = on; };
 
+  /* Put several files (images + the story) into ONE commit with the Git Data API, so GitHub
+     builds the site once instead of once per file. If someone else pushed in the meantime,
+     rebuild the commit on top of theirs once. Returns the new commit's sha. */
+  async function commitFiles(files, message, onBlob) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const ref = await gh(`/git/ref/heads/${encodeURIComponent(BRANCH)}`);
+      const base = ref.object.sha;
+      const baseCommit = await gh(`/git/commits/${base}`);
+      const tree = [];
+      for (const [i, file] of files.entries()) {
+        if (!file.blob) {
+          if (onBlob) onBlob(i, file);
+          file.blob = (await gh('/git/blobs', { method: 'POST', body: JSON.stringify({ content: file.content64, encoding: 'base64' }) })).sha;
+        }
+        tree.push({ path: file.path, mode: '100644', type: 'blob', sha: file.blob });
+      }
+      const newTree = await gh('/git/trees', { method: 'POST', body: JSON.stringify({ base_tree: baseCommit.tree.sha, tree }) });
+      const commit = await gh('/git/commits', { method: 'POST', body: JSON.stringify({ message, tree: newTree.sha, parents: [base] }) });
+      try {
+        await gh(`/git/refs/heads/${encodeURIComponent(BRANCH)}`, { method: 'PATCH', body: JSON.stringify({ sha: commit.sha, force: false }) });
+        return commit.sha;
+      } catch (err) {
+        if (err.status !== 422 || attempt) throw err;   // 422 = the branch moved meanwhile: try once more on top
+      }
+    }
+  }
+
   ui.deploy.addEventListener('click', async () => {
+    watching++;   // a new action: stop the previous build timer so it can't overwrite this message
     const f = Object.fromEntries(Object.entries(form).map(([k, el]) => [k, el.value.trim()]));
     f.body = getBody();
     if (!f.title) return say(ui.status, 'Every story needs a title.', 'error');
     if (!f.body.trim()) return say(ui.status, 'The cup is empty — write something first.', 'error');
     if (!/^\d{4}-\d{2}-\d{2}$/.test(f.date) || !/^\d{2}:\d{2}$/.test(f.time)) return say(ui.status, 'Please set a date and time.', 'error');
-    if (new Date(`${f.date}T${f.time}:00+07:00`) > new Date() &&
-        !confirm('This date is in the future (Vietnam time). Jekyll hides future posts, so it won’t appear until a later rebuild after that time. Deploy anyway?')) return;
+    const when = new Date(`${f.date}T${f.time}:00+07:00`);
+    const future = when > new Date();
+    if (future && !confirm(`This story is dated ${f.date} ${f.time} (Vietnam time), which is in the future.\n\nIt will stay hidden until then and appear on its own within about 15 minutes of that time. Deploy now?`)) return;
 
     busy(true);
-    const started = Date.now();
     try {
       const path = current ? current.path : newPath();
       if (!current) {
         try { await getFile(path); throw Object.assign(new Error(`A story already lives at ${path}. Change the title or date.`), { status: 409 }); }
         catch (err) { if (err.status !== 404) throw err; }
+      } else {
+        const live = await getFile(path);   // someone (or another tab) changed it since we opened it?
+        if (live.sha !== current.sha) throw Object.assign(new Error('changed'), { status: 409 });
       }
       const used = [...pending.keys()].filter(k => f.body.includes(k) || f.cover === k);
-      for (const [i, key] of used.entries()) {
-        say(ui.status, `Carrying image ${i + 1}/${used.length} to the shelf…`);
-        const bytes = new Uint8Array(await pending.get(key).arrayBuffer());
-        await putFile(key.slice(1), bytesToB64(bytes), `Add image ${key.split('/').pop()}`);
-        pending.delete(key);
-      }
-      say(ui.status, 'Pouring the story…');
-      const res = await putFile(path, textToB64(buildFile(f)), `${current ? 'Update' : 'Publish'}: ${f.title}`, current && current.sha);
-      current = { path, sha: res.content.sha }; dirty = false;
+      const files = [];
+      for (const key of used) files.push({ path: key.slice(1), content64: bytesToB64(new Uint8Array(await pending.get(key).arrayBuffer())), image: true });
+      const story = { path, content64: textToB64(buildFile(f)) };
+      files.push(story);
+      const sha = await commitFiles(files, `${current ? 'Update' : 'Publish'}: ${f.title}`, (i, file) => {
+        say(ui.status, file.image ? `Carrying image ${i + 1}/${used.length} to the shelf…` : 'Pouring the story…');
+      });
+      used.forEach(k => pending.delete(k));
+      current = { path, sha: story.blob }; dirty = false;
       setMode(f.title); refreshPath();
-      say(ui.status, `Served! GitHub builds the site in ~1–2 minutes: ${postUrl(path)}. ${CACHE_NOTE}`, 'ok');
       await loadList();
-      watchBuild(started, path);
+      watchLive(sha, future
+        ? { done: `Saved ✓ It’s dated ${f.date} ${f.time}, so it stays hidden until then and appears on its own shortly after.`, link: null }
+        : { done: 'Live now ✓', link: postUrl(path) });
     } catch (err) {
       say(ui.status, err.status === 409 && err.message.includes('already')
         ? err.message
@@ -546,25 +579,47 @@
     if (!current) return;
     const title = form.title.value || current.path;
     if (!confirm(`Take “${title}” off the menu?\n\nIt disappears from the site after the next build. It stays recoverable in the repository's git history. Images are kept.`)) return;
-    busy(true); say(ui.status, 'Clearing the table…');
+    watching++; busy(true); say(ui.status, 'Clearing the table…');
     try {
-      await gh(`/contents/${encPath(current.path)}`, { method: 'DELETE', body: JSON.stringify({ message: `Remove: ${title}`, sha: current.sha, branch: BRANCH }) });
+      const res = await gh(`/contents/${encPath(current.path)}`, { method: 'DELETE', body: JSON.stringify({ message: `Remove: ${title}`, sha: current.sha, branch: BRANCH }) });
       dirty = false; current = null; newPost();
-      say(ui.status, `Removed “${title}”. GitHub rebuilds the site in ~1–2 minutes. ${CACHE_NOTE}`, 'ok');
       await loadList();
+      watchLive(res && res.commit && res.commit.sha, { done: `Removed “${title}” ✓ It’s gone from the site.`, link: null });
     } catch (err) { say(ui.status, isNoWrite(err) ? `Couldn’t delete. ${NO_WRITE_HELP}` : `Couldn’t delete: ${err.message}`, 'error'); }
     finally { busy(false); }
   });
 
-  /* Optional: follow the GitHub Pages build (needs Pages: read on the token; silently skipped otherwise) */
-  async function watchBuild(since, path) {
-    for (let i = 0; i < 24; i++) {
-      await new Promise(r => setTimeout(r, 8000));
-      let b; try { b = await gh('/pages/builds/latest'); } catch { return; }
-      if (!b || new Date(b.created_at).getTime() < since - 5000) continue;
-      if (b.status === 'built') return say(ui.status, `Live now ✓ ${postUrl(path)} — if you still see the old page, press Ctrl+F5.`, 'ok');
-      if (b.status === 'errored') return say(ui.status, `GitHub Pages build failed: ${(b.error && b.error.message) || 'see the repo’s Actions tab'}`, 'error');
-    }
+  /* Follow the public site until the build that contains our commit is live: /freshness.json
+     reports the commit it was built from. Shows a running timer meanwhile. No extra token
+     permission needed — it reads the public site. */
+  async function watchLive(sha, { done, link }) {
+    const id = ++watching, t0 = Date.now(), since = Math.floor(t0 / 1000) - 5;
+    const secs = () => Math.round((Date.now() - t0) / 1000);
+    const show = () => say(ui.status, `Served ✓ GitHub is brewing the site… ${secs()}s (usually about 40s).`);
+    show();
+    const tick = setInterval(() => { if (id === watching) show(); }, 1000);
+    try {
+      while (id === watching && Date.now() - t0 < 4 * 60e3) {
+        await new Promise(r => setTimeout(r, 4000));
+        if (id !== watching) return;
+        let data = null;
+        try { data = await fetch(`${FRESH}?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)); } catch { /* offline for a moment */ }
+        if (!data) continue;
+        const ours = data.rev ? sha && data.rev === sha : +data.built >= since;   // rev missing only outside GitHub Pages
+        if (!ours) continue;
+        clearInterval(tick);
+        say(ui.status, '');
+        ui.status.append(`${done} (${secs()}s)`);
+        if (link) {
+          ui.status.append(' ');
+          const a = document.createElement('a'); a.href = link; a.target = '_blank'; a.rel = 'noopener'; a.textContent = link;
+          ui.status.append(a);
+        }
+        ui.status.classList.add('is-ok');
+        return;
+      }
+      if (id === watching) say(ui.status, 'Saved ✓ The site is taking longer than usual to build — it should catch up in a few minutes (see the repository’s Actions tab if not).');
+    } finally { clearInterval(tick); }
   }
 
   /* ---------- start ---------- */

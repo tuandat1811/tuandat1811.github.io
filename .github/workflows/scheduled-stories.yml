@@ -1,0 +1,59 @@
+# Serve scheduled stories on time.
+# Jekyll hides posts dated in the future, and GitHub Pages only rebuilds when something is pushed,
+# so a story dated "tomorrow 00:06" would otherwise stay hidden until the next edit.
+# Every 15 minutes this checks whether any story's date has passed since the last Pages build,
+# and only then asks GitHub Pages to rebuild. Checks with nothing due cost nothing on the site.
+name: Serve scheduled stories
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+
+concurrency:
+  group: scheduled-stories
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: _posts
+
+      - name: Rebuild if a dated story has come due
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          last=$(gh api "repos/$REPO/pages/builds/latest" --jq .created_at 2>/dev/null || true)
+          echo "Last Pages build: ${last:-unknown}"
+          due=$(LAST="$last" node - <<'JS'
+          const fs = require('fs');
+          const last = Date.parse(process.env.LAST || '') || 0;
+          const now = Date.now();
+          const due = [];
+          for (const name of fs.readdirSync('_posts').filter(n => /\.(md|markdown)$/.test(n))) {
+            const text = fs.readFileSync(`_posts/${name}`, 'utf8');
+            const m = text.match(/^date:\s*["']?(\d{4}-\d{2}-\d{2})(?:[ T](\d{2}:\d{2})(?::(\d{2}))?)?\s*([+-]\d{2}:?\d{2}|Z)?/m);
+            const d = m ? m[1] : name.slice(0, 10);
+            const tz = m && m[4] ? (m[4] === 'Z' ? 'Z' : m[4].replace(/^([+-]\d{2})(\d{2})$/, '$1:$2')) : '+07:00'; // site timezone
+            const when = Date.parse(`${d}T${(m && m[2]) || '00:00'}:${(m && m[3]) || '00'}${tz}`);
+            if (when && when <= now && when > last) due.push(`${name} (${new Date(when).toISOString()})`);
+          }
+          console.log(due.join('\n'));
+          JS
+          )
+          if [ -z "$due" ]; then
+            echo "Nothing has come due since the last build."
+            exit 0
+          fi
+          echo "Came due since the last build:"
+          echo "$due"
+          gh api -X POST "repos/$REPO/pages/builds" --silent
+          echo "Requested a GitHub Pages rebuild."

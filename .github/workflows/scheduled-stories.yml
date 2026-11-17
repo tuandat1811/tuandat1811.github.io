@@ -1,8 +1,12 @@
 # Serve scheduled stories on time.
 # Jekyll hides posts dated in the future, and GitHub Pages only rebuilds when something is pushed,
 # so a story dated "tomorrow 00:06" would otherwise stay hidden until the next edit.
-# Every 15 minutes this checks whether any story's date has passed since the last Pages build,
-# and only then asks GitHub Pages to rebuild. Checks with nothing due cost nothing on the site.
+# Each run checks whether any story's date has passed since the last Pages build, and only then
+# asks GitHub Pages to rebuild. Runs with nothing due cost nothing on the site.
+#
+# GitHub's own schedule below is best effort: on a quiet repository it often fires only every few
+# hours. The reliable trigger is an outside cron service calling this workflow's "dispatches" API
+# every 15 minutes — see "Scheduled stories" in README.md. The schedule stays as a backup.
 name: Serve scheduled stories
 
 on:
@@ -32,7 +36,17 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           last=$(gh api "repos/$REPO/pages/builds/latest" --jq .created_at 2>/dev/null || true)
-          echo "Last Pages build: ${last:-unknown}"
+          if [ -z "$last" ]; then
+            # fall back to the build stamp the live site publishes (see freshness.json)
+            built=$(curl -fsS "https://${REPO#*/}/freshness.json?t=$(date +%s)" 2>/dev/null | node -e 'try { const b = +JSON.parse(require("fs").readFileSync(0, "utf8")).built; if (b) console.log(new Date(b * 1000).toISOString()); } catch {}' || true)
+            last="$built"
+          fi
+          if [ -z "$last" ]; then
+            # without a reference time every old story would look "due" and the site would rebuild on every run
+            echo "::warning::Couldn't tell when the site was last built; skipping this check."
+            exit 0
+          fi
+          echo "Last Pages build: $last"
           due=$(LAST="$last" node - <<'JS'
           const fs = require('fs');
           const last = Date.parse(process.env.LAST || '') || 0;

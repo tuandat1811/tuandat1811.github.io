@@ -9,6 +9,7 @@ permalink: /about/
 
 Hey there — I'm **Dat**, the one behind the counter. Everyone carries their own story, so this little café is where I set mine down, one cup at a time.
 
+- 🎮 These days I work as a game producer.
 - 🌱 Studied Computer Engineering at Hanoi University of Science and Technology.
 - 👀 Once Vice President of the SOICT Innovation Club — together we went wild.
 - 💞 Off shift, I like chilling out, a good coffee, some games, or simply a long rest.

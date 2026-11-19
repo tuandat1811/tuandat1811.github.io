@@ -26,6 +26,10 @@ exclude:
   - Gemfile
   - Gemfile.lock
 
+# Content-Security-Policy for every page: only scripts from this site run, so HTML pasted into a
+# story can't execute anything. The back room sets a stricter one in its own front matter.
+csp: "script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+
 # Back room (hidden admin page at /backroom/)
 admin:
   repo: tuandat1811/tuandat1811.github.io

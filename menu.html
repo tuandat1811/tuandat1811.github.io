@@ -15,7 +15,7 @@ permalink: /menu/
       {% if site.posts.size > 0 %}
       <ul class="chalk-list" data-paginate="10">
         {% for post in site.posts %}
-        <li><a href="{{ post.url | relative_url }}"><span>{{ post.title }}</span><i aria-hidden="true"></i><time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: '%d.%m.%y' }}</time></a></li>
+        <li><a href="{{ post.url | relative_url }}"><span>{{ post.title | escape }}</span><i aria-hidden="true"></i><time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: '%d.%m.%y' }}</time></a></li>
         {% endfor %}
       </ul>
       {% else %}

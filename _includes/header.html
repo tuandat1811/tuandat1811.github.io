@@ -1,9 +1,9 @@
 <header class="awning">
   <div class="wrap awning__inner">
-    <a class="sign" href="{{ '/' | relative_url }}" aria-label="{{ site.title }} — home">
+    <a class="sign" href="{{ '/' | relative_url }}" aria-label="{{ site.title | escape }} — home">
       <span class="sign__cup" aria-hidden="true">☕</span>
-      <span class="sign__name">{{ site.title }}</span>
-      <span class="sign__sub">{{ site.tagline }}</span>
+      <span class="sign__name">{{ site.title | escape }}</span>
+      <span class="sign__sub">{{ site.tagline | escape }}</span>
     </a>
     <nav class="nav" aria-label="Main">
       {% assign here = page.url %}

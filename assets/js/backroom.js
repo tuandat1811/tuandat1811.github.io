@@ -2,6 +2,12 @@
 (() => {
   const root = document.querySelector('[data-backroom]');
   if (!root) return;
+  /* Never work inside another site's frame (clickjacking): a page can't forbid framing from a
+     <meta> tag and GitHub Pages sends no header for it, so refuse here instead. */
+  if (window.top !== window.self) {
+    root.replaceChildren(Object.assign(document.createElement('p'), { className: 'br-msg is-error', textContent: 'The back room only opens in its own tab.' }));
+    return;
+  }
 
   const REPO = root.dataset.repo;
   const BRANCH = root.dataset.branch || 'main';
@@ -12,6 +18,9 @@
   const POSTS_DIR = '_posts';
   const IMG_DIR = 'assets/img/posts';
   const MAX_IMG = 8 * 1024 * 1024;
+  /* Raster images only. An SVG can carry scripts, and opened directly from this site it would run
+     with access to the saved token. The extension comes from the type, since Pages serves by extension. */
+  const IMG_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp', 'image/avif': 'avif' };
 
   const $ = s => root.querySelector(s);
   const views = { login: $('[data-view="login"]'), desk: $('[data-view="desk"]') };
@@ -485,10 +494,10 @@
   /* ---------- images (kept locally until Deploy) ---------- */
   function stageImage(file) {
     if (!file) return null;
-    if (!file.type.startsWith('image/')) { say(ui.status, 'That file isn’t an image.', 'error'); return null; }
+    const ext = IMG_TYPES[file.type];
+    if (!ext) { say(ui.status, 'Use a JPG, PNG, GIF, WebP or AVIF image (SVG and other files aren’t allowed).', 'error'); return null; }
     if (file.size > MAX_IMG) { say(ui.status, `Image is too large (max ${MAX_IMG / 1048576} MB).`, 'error'); return null; }
-    const fname = file.name || `pasted.${(file.type.split('/')[1] || 'png').replace('jpeg', 'jpg')}`;
-    const ext = (fname.match(/\.([a-z0-9]+)$/i) || [, 'jpg'])[1].toLowerCase();
+    const fname = file.name || `pasted.${ext}`;
     const base = slugify(fname.replace(/\.[^.]+$/, ''));
     const stamp = new Date().toISOString().slice(0, 10);
     const key = `/${IMG_DIR}/${stamp}-${base}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
